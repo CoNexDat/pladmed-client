@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+
 import urllib.request
 import urllib.parse
 import json
+import subprocess
 
 class Client:
     def __init__(self):
@@ -12,3 +15,6 @@ class Client:
             print(json.loads(response.read()))
         except:
             print("Can't reach server")
+
+        process = subprocess.run(["scamper", "-?"])
+        #process = subprocess.run(["ls"])
