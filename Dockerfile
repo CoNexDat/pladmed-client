@@ -2,7 +2,7 @@ FROM alpine:3.7
 
 COPY ./scamper ./scamper
 
-RUN apk add gcc g++ libffi-dev musl-dev zlib-dev linux-headers make\
+RUN apk add gcc g++ libffi-dev musl-dev zlib-dev linux-headers make bind-tools \
     && cd scamper && ./configure && make && make install \
     && apk del gcc g++ libffi-dev musl-dev zlib-dev linux-headers make
 

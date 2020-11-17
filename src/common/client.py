@@ -16,5 +16,5 @@ class Client:
         except:
             print("Can't reach server")
 
-        process = subprocess.run(["scamper", "-?"])
-        #process = subprocess.run(["ls"])
+        subprocess.run(["dig", "www.google.com"])
+        result = subprocess.run(["scamper", "-c", "trace -P UDP-paris", "-i", "179.60.195.36"])
