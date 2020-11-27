@@ -4,6 +4,7 @@ from common.client import Client
 import socketio
 import time
 
+HOST = "http://0.0.0.0:5000"
 DELAY_BETWEEN_RETRY = 5
 
 sio = socketio.Client(engineio_logger=True, reconnection=True, reconnection_attempts=0)
@@ -37,7 +38,7 @@ def connect_to_server(host):
             time.sleep(DELAY_BETWEEN_RETRY)
 
 def main():
-    connect_to_server("http://0.0.0.0:5000")
+    connect_to_server(HOST)
 
 if __name__== "__main__":
 	main()
