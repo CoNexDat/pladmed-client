@@ -26,13 +26,27 @@ class Client:
         # Params must be a dict with params
         sub_cmd = self.parser.parse_traceroute(params)
 
+        self.execute_scamper(sub_cmd)
+
+        print("Operation finished")
+
+    def ping(self, params):
+        # Params must be a dict with params
+        sub_cmd = self.parser.parse_ping(params)
+        self.execute_scamper(sub_cmd)
+
+        print("Operation finished")
+
+    def execute_scamper(self, sub_cmd):
         print("Executing scamper -c with params: ", sub_cmd)
 
         result = subprocess.run(
             ["scamper", "-c"] + sub_cmd
         )
 
-        print("Operation finished")
-
     def disconnect(self):
         print("Client disconnected")
+
+    def on_message(self, data):
+        print("Received: ", data)
+

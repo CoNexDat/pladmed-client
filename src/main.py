@@ -22,7 +22,12 @@ def disconnect():
 
 @sio.on('operation')
 def on_traceroute(data):
-    client.traceroute(data["params"])
+    if data["operation"] == "traceroute":
+        client.traceroute(data["params"])
+    elif data["operation"] == "ping":
+        client.ping(data["params"])
+    else:
+        print("Error - Not recognized operation")
 
 def connect_to_server():
     running = True
