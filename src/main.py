@@ -6,7 +6,8 @@ import socketio
 import time
 import os
 
-sio = socketio.Client(engineio_logger=True, reconnection=True, reconnection_attempts=0)
+sio = socketio.Client(engineio_logger=True,
+                      reconnection=True, reconnection_attempts=0)
 client = Client()
 
 
@@ -33,6 +34,11 @@ def on_traceroute(data):
 @sio.on('ping')
 def on_ping(data):
     client.ping(data["params"])
+
+
+@sio.on('dns')
+def on_dns(data):
+    client.dns(data["params"])
 
 
 def connect_to_server():
