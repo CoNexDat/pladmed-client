@@ -20,10 +20,6 @@ def connect_error(message):
 def disconnect():
     client.disconnect()
 
-@sio.on('connected')
-def on_message(data):
-    client.on_message(data)
-
 @sio.on('operation')
 def on_traceroute(data):
     client.traceroute(data["params"])

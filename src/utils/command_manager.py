@@ -8,13 +8,13 @@ class CommandManager:
             self.validator.validate(param)
 
     def parse_command(self, param):
-        return self.command + " " + param
+        return self.command + " " + str(param)
 
 class MultiCommandManager(CommandManager):
     def parse_command(self, param):
         complete_param = self.command + " "
 
         for sub_param in param:
-            complete_param += sub_param + " "
+            complete_param += str(sub_param) + " "
 
         return complete_param.rstrip()
