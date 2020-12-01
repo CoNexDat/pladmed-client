@@ -8,6 +8,10 @@ from utils.command_manager import (
     MultiCommandManager
 )
 
+DNS_PARAMS = {
+    "name": CommandManager("-q", AnyValidator())
+}
+
 TRACEROUTE_PARAMS = {
     "confidence": CommandManager("-c", BetweenValidator(0, 0.99)),
     "method": CommandManager("-P", MultiValueValidator(["udp-paris", "icmp-paris", "icp"])),

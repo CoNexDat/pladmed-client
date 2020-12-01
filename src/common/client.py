@@ -36,7 +36,7 @@ class Client:
         print(f"Operation finished with result {result}")
 
     def dns(self, params):
-        sub_cmd = self.parser.parse_traceroute(params)
+        sub_cmd = self.parser.parse_dns(params)
 
         print("Executing dig with params: ", sub_cmd)
 
