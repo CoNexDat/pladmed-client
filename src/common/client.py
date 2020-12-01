@@ -4,25 +4,35 @@ import urllib.request
 import urllib.parse
 import json
 import subprocess
+from utils.params_parser import ParamsParser
 
 class Client:
     def __init__(self):
-        pass
+        self.parser = ParamsParser()
     
     def connect(self):
         print("Client connected")
 
-        try:
+        '''try:
             response = urllib.request.urlopen('http://0.0.0.0:5000/')
             print(json.loads(response.read()))
         except:
             print("Can't reach server")
 
-        subprocess.run(["dig", "www.google.com"])
+        subprocess.run(["dig", "www.google.com"])'''
         #result = subprocess.run(["scamper", "-c", "trace -P UDP-paris", "-i", "179.60.195.36"])
+
+    def traceroute(self, params):
+        # Params must be a dict with params
+        sub_cmd = self.parser.parse_traceroute(params)
+
+        print("Executing scamper -c with params: ", sub_cmd)
+
+        result = subprocess.run(
+            ["scamper", "-c"] + sub_cmd
+        )
+
+        print("Operation finished")
 
     def disconnect(self):
         print("Client disconnected")
-
-    def on_message(self, data):
-        print("Received: ", data)

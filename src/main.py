@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 from common.client import Client
+import config.connection as config
 import socketio
 import time
-
-DELAY_BETWEEN_RETRY = 5
 
 sio = socketio.Client(engineio_logger=True, reconnection=True, reconnection_attempts=0)
 client = Client()
@@ -21,23 +20,23 @@ def connect_error(message):
 def disconnect():
     client.disconnect()
 
-@sio.on('connected')
-def on_message(data):
-    client.on_message(data)
+@sio.on('operation')
+def on_traceroute(data):
+    client.traceroute(data["params"])
 
-def connect_to_server(host):
+def connect_to_server():
     running = True
 
     while running:
         try:
-            sio.connect(host)
+            sio.connect(config.HOST)
             sio.wait
             running = False
         except:
-            time.sleep(DELAY_BETWEEN_RETRY)
+            time.sleep(config.DELAY_BETWEEN_RETRY)
 
 def main():
-    connect_to_server("http://0.0.0.0:5000")
+    connect_to_server()
 
 if __name__== "__main__":
 	main()
