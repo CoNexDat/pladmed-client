@@ -6,10 +6,11 @@ import json
 import subprocess
 from utils.params_parser import ParamsParser
 
+
 class Client:
     def __init__(self):
         self.parser = ParamsParser()
-    
+
     def connect(self):
         print("Client connected")
 
@@ -32,7 +33,18 @@ class Client:
             ["scamper", "-c"] + sub_cmd
         )
 
-        print("Operation finished")
+        print(f"Operation finished with result {result}")
+
+    def dns(self, params):
+        sub_cmd = self.parser.parse_traceroute(params)
+
+        print("Executing dig with params: ", sub_cmd)
+
+        result = subprocess.run(
+            ["dig"] + sub_cmd
+        )
+
+        print(f"Operation finished with result {result}")
 
     def disconnect(self):
         print("Client disconnected")
