@@ -46,7 +46,3 @@ class Client:
 
     def disconnect(self):
         print("Client disconnected")
-
-    def on_message(self, data):
-        print("Received: ", data)
-
