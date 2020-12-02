@@ -8,26 +8,31 @@ import time
 sio = socketio.Client(engineio_logger=True, reconnection=True, reconnection_attempts=0)
 client = Client()
 
+
 @sio.event
 def connect():
     client.connect()
+
 
 @sio.event
 def connect_error(message):
     print("Conn error: ", message)
 
+
 @sio.event
 def disconnect():
     client.disconnect()
 
-@sio.on('operation')
+
+@sio.on('traceroute')
 def on_traceroute(data):
-    if data["operation"] == "traceroute":
-        client.traceroute(data["params"])
-    elif data["operation"] == "ping":
-        client.ping(data["params"])
-    else:
-        print("Error - Not recognized operation")
+    client.traceroute(data["params"])
+
+
+@sio.on('ping')
+def on_ping(data):
+    client.ping(data["params"])
+
 
 def connect_to_server():
     running = True
@@ -40,8 +45,10 @@ def connect_to_server():
         except:
             time.sleep(config.DELAY_BETWEEN_RETRY)
 
+
 def main():
     connect_to_server()
 
-if __name__== "__main__":
-	main()
+
+if __name__ == "__main__":
+    main()
