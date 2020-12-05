@@ -1,4 +1,4 @@
-from config.operations.traceroute import TRACEROUTE_PARAMS, GENERAL_PARAMS
+from config.operations.traceroute import TRACEROUTE_PARAMS, GENERAL_PARAMS, PING_PARAMS
 
 class ParamsParser:
     def parse_params(self, params, valid_params):
@@ -17,5 +17,11 @@ class ParamsParser:
     def parse_traceroute(self, params):
         general_cmd = self.parse_params(params, GENERAL_PARAMS).split(' ')
         sub_cmd = ["trace " + self.parse_params(params, TRACEROUTE_PARAMS)]
+
+        return sub_cmd + general_cmd
+
+    def parse_ping(self, params):
+        general_cmd = self.parse_params(params, GENERAL_PARAMS).split(' ')
+        sub_cmd = ["ping " + self.parse_params(params, PING_PARAMS)]
 
         return sub_cmd + general_cmd

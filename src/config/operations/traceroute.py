@@ -20,6 +20,17 @@ TRACEROUTE_PARAMS = {
     "wait-probe": CommandManager("-W", BetweenValidator(0, 100))
 }
 
+PING_PARAMS = {
+    "probecount": CommandManager("-c", BetweenValidator(1, 100)),
+    "icmp-sum": CommandManager("-C", AnyValidator()),
+    "dport": CommandManager("-d", AnyValidator()),
+    "sport": CommandManager("-F", AnyValidator()),
+    "wait": CommandManager("-i", BetweenValidator(1, 20)),
+    "method": CommandManager("-P", MultiValueValidator(["icmp-echo", "icmp-time", "tcp-syn", "tcp-ack", "tcp-ack-sport", "udp", "udp-dport"])),
+    "size": CommandManager("-s", BetweenValidator(1, 255)),
+    "timeout": CommandManager("-W", BetweenValidator(0, 100))
+}
+
 GENERAL_PARAMS = {
     "ips": MultiCommandManager("-i", AnyValidator())
 }
