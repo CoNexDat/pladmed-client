@@ -4,6 +4,7 @@ from common.client import Client
 import config.connection as config
 import socketio
 import time
+import os
 
 sio = socketio.Client(engineio_logger=True, reconnection=True, reconnection_attempts=0)
 client = Client()
@@ -35,11 +36,13 @@ def on_ping(data):
 
 
 def connect_to_server():
+    token = os.getenv('TOKEN', 'token')
+
     running = True
 
     while running:
         try:
-            sio.connect(config.HOST)
+            sio.connect(config.HOST + "?token=" + token)
             sio.wait
             running = False
         except:
