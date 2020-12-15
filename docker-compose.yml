@@ -6,6 +6,8 @@ services:
     entrypoint: python3 main.py
     environment:
       - PYTHONUNBUFFERED=1
+    env_file:
+      - config
     volumes:
       - ./src:/src
     network_mode: host

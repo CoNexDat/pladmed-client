@@ -11,6 +11,7 @@ RUN python3 -m ensurepip
 RUN pip3 install --no-cache --upgrade pip setuptools
 RUN pip3 install scamper-pywarts
 RUN pip3 install python-socketio[client]
+RUN pip3 install python-socketio[client] --upgrade
 
 RUN chmod -R +x scamper/
 
