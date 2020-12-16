@@ -1,16 +1,14 @@
 from utils.command_validator import (
     AnyValidator,
     BetweenValidator,
-    MultiValueValidator
+    MultiValueValidator,
+    EmptyValidator
 )
+
 from utils.command_manager import (
     CommandManager,
     MultiCommandManager
 )
-
-DNS_PARAMS = {
-    "name": CommandManager("-q", AnyValidator())
-}
 
 TRACEROUTE_PARAMS = {
     "confidence": CommandManager("-c", BetweenValidator(0, 0.99)),
