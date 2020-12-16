@@ -1,4 +1,5 @@
-from config.operations.traceroute import TRACEROUTE_PARAMS, GENERAL_PARAMS, DNS_PARAMS
+from config.operations.traceroute import TRACEROUTE_PARAMS, GENERAL_PARAMS
+from config.operations.dns import DNS_PARAMS
 
 
 class ParamsParser:
