@@ -7,32 +7,40 @@ import subprocess
 from utils.params_parser import ParamsParser
 
 class Client:
-    def __init__(self):
+    def __init__(self, storage):
         self.parser = ParamsParser()
+        self.storage = storage
     
     def connect(self):
         print("Client connected")
 
-    def traceroute(self, params):
+    def traceroute(self, op_id, params):
         # Params must be a dict with params
         sub_cmd = self.parser.parse_traceroute(params)
 
-        result = self.execute_scamper(sub_cmd)
+        result = self.execute_scamper(op_id, sub_cmd)
 
         print(f"Operation finished with result {result}")
 
-    def ping(self, params):
+    def ping(self, op_id, params):
         # Params must be a dict with params
         sub_cmd = self.parser.parse_ping(params)
-        result = self.execute_scamper(sub_cmd)
+        result = self.execute_scamper(op_id, sub_cmd)
 
         print(f"Operation finished with result {result}")
 
-    def execute_scamper(self, sub_cmd):
+    def execute_scamper(self, op_id, sub_cmd):
         print("Executing scamper -c with params: ", sub_cmd)
 
         return subprocess.run(
-            ["scamper", "-c"] + sub_cmd
+            [
+                "scamper",
+                "-O",
+                "warts",
+                "-o",
+                self.storage.create_operation_filename(op_id),
+                "-c"
+            ] + sub_cmd
         )
 
     def disconnect(self):
