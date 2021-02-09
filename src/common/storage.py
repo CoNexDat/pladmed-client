@@ -1,5 +1,4 @@
 from os import path
-import compress_json
 
 class Storage:
     def __init__(self, store_in):
