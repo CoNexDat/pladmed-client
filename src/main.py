@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
 from common.client import Client
+from common.storage import Storage
 import config.connection as config
 import socketio
 import time
 import os
 
 sio = socketio.Client(engineio_logger=True, reconnection=True, reconnection_attempts=0)
-client = Client()
+
+storage = Storage(config.RESULT_FOLDER)
+client = Client(storage)
 
 
 @sio.event
@@ -27,12 +30,12 @@ def disconnect():
 
 @sio.on('traceroute')
 def on_traceroute(data):
-    client.traceroute(data["params"])
+    client.traceroute(data["_id"], data["params"])
 
 
 @sio.on('ping')
 def on_ping(data):
-    client.ping(data["params"])
+    client.ping(data["_id"], data["params"])
 
 
 def connect_to_server():

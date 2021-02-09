@@ -10,4 +10,5 @@ services:
       - config
     volumes:
       - ./src:/src
+      - ./results:/src/results
     network_mode: host
