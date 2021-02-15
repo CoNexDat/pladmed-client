@@ -5,6 +5,7 @@ import config.connection as config
 import socketio
 import time
 import os
+import subprocess
 
 sio = socketio.Client(engineio_logger=True, reconnection=True, reconnection_attempts=0)
 client = Client()
@@ -36,6 +37,7 @@ def on_ping(data):
 
 
 def connect_to_server():
+    subprocess.run("crond") # Starts crontab
     token = os.getenv('TOKEN', 'token')
 
     running = True

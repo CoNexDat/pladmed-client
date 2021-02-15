@@ -5,6 +5,7 @@ import urllib.parse
 import json
 import subprocess
 from utils.params_parser import ParamsParser
+from crontab import CronTab
 
 class Client:
     def __init__(self):
@@ -32,6 +33,9 @@ class Client:
 
     def ping(self, params):
         # Params must be a dict with params
+        with CronTab(user=True) as cron:
+            job = cron.new(command='echo "hola" >> /file.txt')
+            job.setall('* * * * *')
         sub_cmd = self.parser.parse_ping(params)
         result = self.execute_scamper(sub_cmd)
 
