@@ -40,7 +40,7 @@ def on_ping(data):
 
 
 def connect_to_server():
-    subprocess.run("crond") # Starts crontab
+    subprocess.run("crond")
     token = os.getenv('TOKEN', 'token')
 
     running = True

@@ -11,5 +11,6 @@ class Storage:
 
         while (path.exists(file_storage)):
             file_storage = self.store_in + op_id + "_part_" + str(i)
+            i += 1
 
         return file_storage
