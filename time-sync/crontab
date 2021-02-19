@@ -1,2 +1,2 @@
-41 21 * * * /bin/echo "test" >> /var/log/cron.log 2>&1
+* * * * * /usr/bin/python3 /src/time-sync/sync.py >> /var/log/cron.log 2>&1
 # This extra line makes it a valid cron
