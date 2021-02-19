@@ -4,6 +4,13 @@ COPY ./scamper ./scamper
 COPY ./docker-entrypoint.sh .
 COPY ./src/requirements.txt .
 
+# Register daily cron job for client time synchronization
+RUN mkdir /etc/cron.d
+COPY ./time-sync/crontab /etc/cron.d/timesync
+RUN chmod +x /etc/cron.d/timesync
+RUN crontab /etc/cron.d/timesync
+RUN touch /var/log/cron.log
+
 RUN apk add gcc g++ libffi-dev musl-dev zlib-dev linux-headers make bind-tools \
     && cd scamper && ./configure && make && make install \
     && apk del gcc g++ libffi-dev musl-dev zlib-dev linux-headers make
