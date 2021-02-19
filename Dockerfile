@@ -1,6 +1,7 @@
 FROM alpine:3.7
 
 COPY ./scamper ./scamper
+COPY ./docker-entrypoint.sh .
 COPY ./src/requirements.txt .
 
 RUN apk add gcc g++ libffi-dev musl-dev zlib-dev linux-headers make bind-tools \

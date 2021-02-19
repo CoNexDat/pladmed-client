@@ -8,7 +8,6 @@ build:
 .PHONY: build
 
 start: build
-	#docker run --rm --network host -v /src:/src client:latest
 	docker-compose up --d
 .PHONY: start
 

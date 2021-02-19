@@ -3,7 +3,8 @@ services:
   client:
     container_name: client
     image: client:latest
-    entrypoint: python3 main.py
+    entrypoint: ../docker-entrypoint.sh
+    command: python3 main.py
     environment:
       - PYTHONUNBUFFERED=1
     env_file:
