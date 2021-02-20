@@ -5,7 +5,10 @@ COPY ./docker-entrypoint.sh .
 COPY ./src/requirements.txt .
 
 # Register daily cron job for client time synchronization
+ARG SYNC_TIME
+ENV SYNC_TIME_VAR=${SYNC_TIME}
 RUN mkdir /etc/cron.d
+RUN echo "Daily sync at UTC hour: ${SYNC_TIME_VAR}"
 COPY ./time-sync/crontab /etc/cron.d/timesync
 RUN chmod 0644 /etc/cron.d/timesync
 RUN touch /var/log/cron.log
