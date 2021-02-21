@@ -1,2 +1,2 @@
 TOKEN=<Place your token here>
-NTP_SERVER=<Place backend's NTP server url here>
+NTP_SERVER=pool.ntp.org
