@@ -10,6 +10,7 @@ ENV SYNC_TIME_VAR=${SYNC_TIME}
 RUN mkdir /etc/cron.d
 RUN echo "Daily sync at UTC hour: ${SYNC_TIME_VAR}"
 COPY ./time-sync/crontab /etc/cron.d/timesync
+RUN sed -i "s/__SYNC_TIME__/${SYNC_TIME_VAR}/g" /etc/cron.d/timesync
 RUN chmod 0644 /etc/cron.d/timesync
 RUN touch /var/log/cron.log
 RUN crontab /etc/cron.d/timesync

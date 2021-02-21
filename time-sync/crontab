@@ -1,2 +1,2 @@
-* * * * * /usr/bin/python3 /src/time-sync/sync.py >> /var/log/cron.log 2>&1
+0 __SYNC_TIME__ * * * /usr/bin/python3 /src/time-sync/sync.py >> /var/log/cron.log 2>&1
 # This extra line makes it a valid cron
