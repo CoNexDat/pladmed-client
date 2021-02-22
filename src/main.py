@@ -2,12 +2,12 @@
 
 from common.client import Client
 from common.storage import Storage
-from common.operations_manager import OperationsManager
 import config.connection as config
 import socketio
 import time
 import os
 from multiprocessing import Process
+from common.operations_manager import OperationsManager
 
 def config_connection(client):
     processes = []
@@ -64,8 +64,14 @@ def connect_to_server(client):
 def main():
     sio = socketio.Client(engineio_logger=True, reconnection=True, reconnection_attempts=0)
 
-    storage = Storage(config.RESULT_FOLDER)
-    operations_manager = OperationsManager()
+    storage = Storage(
+        config.RESULT_FOLDER,
+        config.STATE_FILE,
+        config.TMP_FOLDER
+    )
+    
+    operations_manager = OperationsManager(storage)
+
     client = Client(sio, storage, operations_manager)  
 
     connect_to_server(client)

@@ -1,16 +1,16 @@
 from multiprocessing import Process, SimpleQueue
 from config.connection import RESULT_FOLDER
 import subprocess
+from common.operation import Operation
 
 STOP = 0
 NEW_RESULTS = 1
 
-class TransmitManager():#Process):
-    def __init__(self, sio, operations_manager):
-        #super(Process, self).__init__()
-
+class TransmitManager():
+    def __init__(self, sio, storage, operations_manager):
         self.sio = sio
         self.queue = SimpleQueue()
+        self.storage = storage
         self.operations_manager = operations_manager
     
     def run(self):
@@ -18,7 +18,12 @@ class TransmitManager():#Process):
 
     def start(self):        
         while self.queue.get() != STOP:
-            operation = self.queue.get()
+            operation_data = self.queue.get()
+
+            operation = Operation(
+                operation_data["id"],
+                operation_data["params"]
+            )
 
             print("Got finished operation: ", operation)
 
@@ -27,14 +32,16 @@ class TransmitManager():#Process):
 
             self.operations_manager.remove_operation(operation)
 
-        print("Finalizando...")
+        print("Transmit manager ending its work...")
 
     def send_results(self, operation):
-        with open(RESULT_FOLDER + "/" + operation, 'rb') as f:
+        filename = self.storage.operation_filename(operation)
+
+        with open(filename, 'rb') as f:
             content = f.read()
 
             data_to_send = {
-                "operation_id": operation,
+                "operation_id": operation.id,
                 "content": content,
                 "eof": True
             }
@@ -44,6 +51,6 @@ class TransmitManager():#Process):
     def stop(self):
         self.queue.put(STOP)
 
-    def notify_end_operation(self, op_id):
+    def notify_end_operation(self, operation):
         self.queue.put(NEW_RESULTS)
-        self.queue.put(op_id)
+        self.queue.put(operation.data())

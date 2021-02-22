@@ -11,6 +11,7 @@ RUN python3 -m ensurepip
 RUN pip3 install --no-cache --upgrade pip setuptools
 RUN pip3 install python-socketio[client]
 RUN pip3 install python-socketio[client] --upgrade
+RUN pip3 install atomicwrites==1.4.0
 
 RUN chmod -R +x scamper/
 

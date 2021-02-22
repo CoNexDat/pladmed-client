@@ -2,10 +2,11 @@
 
 import urllib.request
 import urllib.parse
-import json
 import subprocess
 from utils.params_parser import ParamsParser
 from common.transmit_manager import TransmitManager
+from common.operations_manager import OperationsManager
+from common.operation import Operation
 import time
 
 class Client:
@@ -13,13 +14,29 @@ class Client:
         self.sio = sio
         self.parser = ParamsParser()
         self.storage = storage
-        self.operations_manager = operations_manager
-        self.transmit_manager = TransmitManager(self.sio, self.operations_manager)
+        self.operations_manager = operations_manager  
+        self.transmit_manager = TransmitManager(
+            self.sio,
+            self.storage,
+            self.operations_manager
+        )
+
+        self.execute_pending_tasks()
+    
+    def execute_pending_tasks(self):
+        finished_ops = self.operations_manager.finished_operations()
+        in_process_ops = self.operations_manager.in_process_operations()
+
+        # Notify pending operations to transmit manager
+        for operation in finished_ops:
+            self.transmit_manager.notify_end_operation(operation)
+
+        # Execute pending operations
+        for operation in in_process_ops:
+            self.execute_scamper(operation)
 
     def connect(self):
         print("Client connected")
-
-        # Notify pending operations to transmit manager
         self.operations_manager.start()
         self.transmit_manager.start()
 
@@ -33,17 +50,22 @@ class Client:
         # Params must be a dict with params
         sub_cmd = self.parser.parse_traceroute(params)
 
-        result = self.execute_scamper(op_id, sub_cmd)
+        operation = Operation(op_id, sub_cmd)
+
+        result = self.execute_scamper(operation)
 
     def ping(self, op_id, params):
         # Params must be a dict with params
         sub_cmd = self.parser.parse_ping(params)
-        result = self.execute_scamper(op_id, sub_cmd)
 
-    def execute_scamper(self, op_id, sub_cmd):
-        print("Executing scamper -c with params: ", sub_cmd)
+        operation = Operation(op_id, sub_cmd)
 
-        self.operations_manager.add_operation(op_id)
+        result = self.execute_scamper(operation)
+
+    def execute_scamper(self, operation):
+        print("Executing scamper -c with params: ", operation.params)
+
+        self.operations_manager.add_operation(operation)
 
         subprocess.run(
             [
@@ -51,10 +73,10 @@ class Client:
                 "-O",
                 "warts",
                 "-o",
-                self.storage.create_operation_filename(op_id),
+                self.storage.operation_filename_tmp(operation),
                 "-c"
-            ] + sub_cmd
+            ] + operation.params
         )
 
-        self.operations_manager.end_operation(op_id)
-        self.transmit_manager.notify_end_operation(op_id)
+        self.operations_manager.end_operation(operation)
+        self.transmit_manager.notify_end_operation(operation)
