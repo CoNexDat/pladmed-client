@@ -3,11 +3,13 @@
 from common.client import Client
 from common.storage import Storage
 import config.connection as config
+import timesync.sync as timesync
 import socketio
 import time
 import os
 
-sio = socketio.Client(engineio_logger=True, reconnection=True, reconnection_attempts=0)
+sio = socketio.Client(engineio_logger=True,
+                      reconnection=True, reconnection_attempts=0)
 
 storage = Storage(config.RESULT_FOLDER)
 client = Client(storage)
@@ -54,6 +56,7 @@ def connect_to_server():
 
 def main():
     connect_to_server()
+    timesync.listen()
 
 
 if __name__ == "__main__":
