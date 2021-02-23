@@ -12,6 +12,7 @@ RUN pip3 install --no-cache --upgrade pip setuptools
 RUN pip3 install python-socketio[client] --upgrade
 RUN pip3 install atomicwrites==1.4.0
 RUN pip3 install python-crontab
+RUN pip3 install croniter
 
 RUN chmod -R +x scamper/
 

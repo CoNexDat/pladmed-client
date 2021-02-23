@@ -1,7 +1,10 @@
 class Operation:
-    def __init__(self, id_, params):
+    def __init__(self, id_, params, cron, times_per_minute, stop_time):
         self.id = id_
         self.params = params
+        self.cron = cron
+        self.times_per_minute = times_per_minute
+        self.stop_time = stop_time
     
     def data(self):
         return self.__dict__

@@ -22,7 +22,10 @@ class TransmitManager():
 
             operation = Operation(
                 operation_data["id"],
-                operation_data["params"]
+                operation_data["params"],
+                operation_data["cron"],
+                operation_data["times_per_minute"],
+                operation_data["stop_time"]
             )
 
             print("Got finished operation: ", operation)

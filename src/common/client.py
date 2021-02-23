@@ -8,7 +8,7 @@ from utils.params_parser import ParamsParser
 from common.transmit_manager import TransmitManager
 from common.operations_manager import OperationsManager
 from common.operation import Operation
-import time
+from utils.time_utils import is_over
 
 class Client:
     def __init__(self, sio, storage, operations_manager):
@@ -51,31 +51,35 @@ class Client:
         # Params must be a dict with params
         sub_cmd = self.parser.parse_traceroute(params)
 
-        operation = Operation(op_id, sub_cmd)
-        self.execute_scamper(operation, params["cron"], params["times_per_minute"], params["stop_time"])
+        operation = Operation(op_id, sub_cmd, params["cron"], params["times_per_minute"], params["stop_time"])
+        self.execute_scamper(operation)
 
     def ping(self, op_id, params):
         # Params must be a dict with params
         sub_cmd = self.parser.parse_ping(params)
 
-        operation = Operation(op_id, sub_cmd)
-        self.execute_scamper(operation, params["cron"], params["times_per_minute"], params["stop_time"])
+        operation = Operation(op_id, sub_cmd, params["cron"], params["times_per_minute"], params["stop_time"])
+        self.execute_scamper(operation)
 
-    def execute_scamper(self, operation, cron_expression, times_per_minute, stop_time):
+    def execute_scamper(self, operation):
         print("Executing scamper -c with params: ", operation.params)
-        self.operations_manager.add_operation(operation)
-        # filename = self.storage.create_operation_filename(op_id)
+        if is_over(operation.stop_time):
+            # What should I do here?
+            self.operations_manager.end_operation(operation)
+            # self.transmit_manager.notify_end_operation(operation)
         sub_cmd_str = " ".join([f"'{param}'" for param in operation.params])
-        cron_command = f"python3 /src/scripts/scamper.py {operation.id} {times_per_minute} {sub_cmd_str}"
+        cron_command = f"python3 /src/scripts/scamper.py {operation.id} {operation.times_per_minute} {sub_cmd_str}"
         # Saves execution cron
         with CronTab(user=True) as cron:
             job = cron.new(command=cron_command, comment=operation.id)
-            job.setall(cron_expression)
+            job.setall(operation.cron_expression)
         # Saves stopping cron
         with CronTab(user=True) as cron:
             stop_command = f"python3 /src/scripts/stopper.py {operation.id}"
             job = cron.new(command=stop_command, comment=operation.id)
-            job.setall(stop_time)
+            job.setall(operation.stop_time)
 
-        self.operations_manager.end_operation(operation)
+        # TODO: Mover esto al scamper.py de alguna forma
+        # self.operations_manager.end_operation(operation)
+        # Esto se puede pasar el delete_operation?
         self.transmit_manager.notify_end_operation(operation)
