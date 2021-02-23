@@ -13,5 +13,5 @@ services:
       - config
     volumes:
       - ./src:/src
-      - ./results:/src/results
+      - ./safe_storage:/safe_storage
     network_mode: host
