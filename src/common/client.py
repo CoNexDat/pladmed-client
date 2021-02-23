@@ -7,6 +7,7 @@ from utils.params_parser import ParamsParser
 from common.transmit_manager import TransmitManager
 from common.operations_manager import OperationsManager
 from common.operation import Operation
+import uuid
 import time
 
 class Client:
@@ -50,7 +51,9 @@ class Client:
         # Params must be a dict with params
         sub_cmd = self.parser.parse_traceroute(params)
 
-        operation = Operation(op_id, sub_cmd)
+        unique_code = str(uuid.uuid4())
+
+        operation = Operation(op_id, sub_cmd, unique_code)
 
         result = self.execute_scamper(operation)
 
@@ -58,7 +61,9 @@ class Client:
         # Params must be a dict with params
         sub_cmd = self.parser.parse_ping(params)
 
-        operation = Operation(op_id, sub_cmd)
+        unique_code = str(uuid.uuid4())
+
+        operation = Operation(op_id, sub_cmd, unique_code)
 
         result = self.execute_scamper(operation)
 

@@ -22,19 +22,23 @@ class TransmitManager():
 
             operation = Operation(
                 operation_data["id"],
-                operation_data["params"]
+                operation_data["params"],
+                operation_data["unique_code"]
             )
 
             print("Got finished operation: ", operation)
 
-            # Send operation to server
-            self.send_results(operation)
+            def ack(operation_id):
+                # If operation was successfully saved in the server
+                if operation_id == operation.id:
+                    self.operations_manager.remove_operation(operation)
 
-            self.operations_manager.remove_operation(operation)
+            # Send operation to server
+            self.send_results(operation, ack)
 
         print("Transmit manager ending its work...")
 
-    def send_results(self, operation):
+    def send_results(self, operation, callback):
         filename = self.storage.operation_filename(operation)
 
         with open(filename, 'rb') as f:
@@ -43,10 +47,15 @@ class TransmitManager():
             data_to_send = {
                 "operation_id": operation.id,
                 "content": content,
-                "eof": True
+                "unique_code": operation.unique_code
             }
 
-            self.sio.emit("results", data_to_send, namespace='')
+            self.sio.emit(
+                "results",
+                data_to_send,
+                namespace='',
+                callback=callback
+            )
 
     def stop(self):
         self.queue.put(STOP)

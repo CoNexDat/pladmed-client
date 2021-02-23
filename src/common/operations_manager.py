@@ -53,7 +53,8 @@ class OperationsManager():
 
             operation = Operation(
                 operation_data["id"],
-                operation_data["params"]
+                operation_data["params"],
+                operation_data["unique_code"]
             )
 
             if status == SENT:
