@@ -11,4 +11,3 @@ services:
     volumes:
       - ./src:/src
       - ./safe_storage:/safe_storage
-    network_mode: host
