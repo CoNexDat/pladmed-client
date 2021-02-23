@@ -33,13 +33,15 @@ def listen():
 def sync():
     ntp_server_url = os.getenv('NTP_SERVER', 'ntp_server')
     print(f"Will sync with ntp server at {ntp_server_url}")
-    ntp_time = getNTPTime(ntp_server_url)
-    print(f"Time obtained from server: {ntp_time}")
-    # Set time in container (does not affect host)
-    os.environ['FAKETIME'] = ntp_time_to_fake_time(ntp_time)
+    try:
+        ntp_time = getNTPTime(ntp_server_url)
+        print(f"Time obtained from server: {ntp_time}")
+        # Set time in container (does not affect host)
+        os.environ['FAKETIME'] = ntp_time_to_fake_time(ntp_time)
+    except socket.timeout:
+        print(f"Timed out waiting for NTP time from {ntp_server_url}")
 
 
-# TODO Add retries (with backoff) and timeouts to both send and receive
 def getNTPTime(host="pool.ntp.org"):
     port = 123
     buf = 1024
@@ -53,6 +55,7 @@ def getNTPTime(host="pool.ntp.org"):
     client = socket.socket(AF_INET, SOCK_DGRAM)
     client.sendto(msg.encode('utf-8'), address)
 
+    client.settimeout(5)
     msg, address = client.recvfrom(buf)
 
     t = struct.unpack("!12I", msg)[10]
