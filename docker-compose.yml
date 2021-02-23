@@ -3,8 +3,11 @@ services:
   client:
     container_name: client
     image: client:latest
-    entrypoint: python3 main.py
+    entrypoint: ../docker-entrypoint.sh
+    command: python3 main.py
     environment:
+      - FAKETIME_DONT_RESET=1
+      - LD_PRELOAD=/usr/local/lib/faketime/libfaketime.so.1
       - PYTHONUNBUFFERED=1
     env_file:
       - config
