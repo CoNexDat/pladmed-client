@@ -1,7 +1,8 @@
 class Operation:
-    def __init__(self, id_, params):
+    def __init__(self, id_, params, unique_code):
         self.id = id_
         self.params = params
+        self.unique_code = unique_code
     
     def data(self):
         return self.__dict__

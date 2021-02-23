@@ -22,7 +22,8 @@ class TransmitManager():
 
             operation = Operation(
                 operation_data["id"],
-                operation_data["params"]
+                operation_data["params"],
+                operation_data["unique_code"]
             )
 
             print("Got finished operation: ", operation)
@@ -43,7 +44,7 @@ class TransmitManager():
             data_to_send = {
                 "operation_id": operation.id,
                 "content": content,
-                "eof": True
+                "unique_code": operation.unique_code
             }
 
             self.sio.emit("results", data_to_send, namespace='')
