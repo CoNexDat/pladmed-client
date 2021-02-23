@@ -2,6 +2,7 @@ from multiprocessing import Process, SimpleQueue
 from config.connection import RESULT_FOLDER
 import subprocess
 from common.operation import Operation
+import os
 
 STOP = 0
 NEW_RESULTS = 1
@@ -40,6 +41,8 @@ class TransmitManager():
 
     def send_results(self, operation, callback):
         filename = self.storage.operation_filename(operation)
+
+        print("Sending file size: ", os.path.getsize(filename))
 
         with open(filename, 'rb') as f:
             content = f.read()

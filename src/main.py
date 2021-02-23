@@ -53,7 +53,10 @@ def connect_to_server(client):
 
     while running:
         try:
-            client.sio.connect(config.HOST + "?token=" + token)
+            client.sio.connect(
+                url=config.HOST + "?token=" + token,
+                transports='websocket'
+            )
 
             client.sio.wait
 
