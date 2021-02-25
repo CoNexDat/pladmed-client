@@ -3,7 +3,8 @@ services:
   client:
     container_name: client
     image: client:latest
-    entrypoint: python3 main.py
+    command: python3 main.py
+    entrypoint: ../docker-entrypoint.sh
     environment:
       - PYTHONUNBUFFERED=1
     env_file:
@@ -11,3 +12,5 @@ services:
     volumes:
       - ./src:/src
       - ./safe_storage:/safe_storage
+    cap_add:
+      - NET_ADMIN
