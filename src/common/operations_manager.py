@@ -14,8 +14,6 @@ class OperationsManager():
         self.storage = storage
         self.current_ops = self.storage.read_operations_state()
 
-        print("Starting with: ", self.current_ops)
-
     def in_process_operations(self):
         operations = []
 
@@ -35,6 +33,7 @@ class OperationsManager():
         return operations
 
     def start(self):
+        self.current_ops = self.storage.read_operations_state()
         self.p = Process(target=self.run)
         self.p.start()
         
