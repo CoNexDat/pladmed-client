@@ -21,6 +21,7 @@ class Client:
             self.storage,
             self.operations_manager
         )
+        self.operations_manager.transmit_manager = self.transmit_manager
 
         self.execute_pending_tasks()
 
@@ -52,34 +53,30 @@ class Client:
         sub_cmd = self.parser.parse_traceroute(params)
 
         operation = Operation(op_id, sub_cmd, params["cron"], params["times_per_minute"], params["stop_time"])
-        self.execute_scamper(operation)
+        self.schedule_scamper(operation)
 
     def ping(self, op_id, params):
         # Params must be a dict with params
         sub_cmd = self.parser.parse_ping(params)
 
         operation = Operation(op_id, sub_cmd, params["cron"], params["times_per_minute"], params["stop_time"])
-        self.execute_scamper(operation)
+        self.schedule_scamper(operation)
 
-    def execute_scamper(self, operation):
+    def schedule_scamper(self, operation):
         print("Executing scamper -c with params: ", operation.params)
         if is_over(operation.stop_time):
             # What should I do here?
             self.operations_manager.end_operation(operation)
-            # self.transmit_manager.notify_end_operation(operation)
+            return
         sub_cmd_str = " ".join([f"'{param}'" for param in operation.params])
-        cron_command = f"python3 /src/scripts/scamper.py {operation.id} {operation.times_per_minute} {sub_cmd_str}"
+        cron_command = f"python3 /src/scripts/scamper.py {operation.id} '{operation.cron}' {operation.times_per_minute} '{operation.stop_time}' {sub_cmd_str}"
         # Saves execution cron
         with CronTab(user=True) as cron:
             job = cron.new(command=cron_command, comment=operation.id)
-            job.setall(operation.cron_expression)
+            job.setall(operation.cron)
         # Saves stopping cron
         with CronTab(user=True) as cron:
             stop_command = f"python3 /src/scripts/stopper.py {operation.id}"
             job = cron.new(command=stop_command, comment=operation.id)
             job.setall(operation.stop_time)
 
-        # TODO: Mover esto al scamper.py de alguna forma
-        # self.operations_manager.end_operation(operation)
-        # Esto se puede pasar el delete_operation?
-        self.transmit_manager.notify_end_operation(operation)

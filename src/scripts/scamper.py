@@ -1,7 +1,15 @@
 import subprocess
 import sys
 import time
-from os import path
+from multiprocessing.connection import Listener
+from os import path, getenv
+
+address = ('localhost', 0)
+
+NEW_DATA = 1
+
+IN_PROCESS = 0
+FINISHED = 1
 
 
 def create_operation_filename(op_id):
@@ -16,21 +24,37 @@ def create_operation_filename(op_id):
     return file_storage
 
 
-def add_operation(operation):
-    print("add operation" + operation)
+def add_operation(operation, listener):
+    listener.send(NEW_DATA)
+    listener.send([operation, IN_PROCESS])
 
 
-def end_operation(operation):
-    print("End operation" + operation)
+def end_operation(operation, listener):
+    listener.send(NEW_DATA)
+    listener.send([operation, FINISHED])
 
 
 def main():
     print(sys.argv)
+    listener = Listener(address, authkey=b'secret password')
     op_id = sys.argv[1]
-    times_per_minute = int(sys.argv[2])
-    sub_cmd = sys.argv[3:]
-    operation = None
-    add_operation(operation)
+    print(f"op_id: {op_id}")
+    cron = sys.argv[2]
+    print(f"cron: {cron}")
+    times_per_minute = int(sys.argv[3])
+    print(f"times_per_minute: {times_per_minute}")
+    stop_time = sys.argv[4]
+    print(f"stop_time: {stop_time}")
+    sub_cmd = sys.argv[5:]
+    print(f"sub_cmd: {stop_time}")
+    operation = {
+        "id": op_id,
+        "cron": cron,
+        "times_per_minute": times_per_minute,
+        "stop_time": stop_time,
+        "params": sub_cmd
+    }
+    add_operation(operation, listener.accept())
     for i in range(times_per_minute):
         start = time.time()
         filename = create_operation_filename(op_id)

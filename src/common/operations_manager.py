@@ -1,5 +1,7 @@
-from multiprocessing import Process, SimpleQueue
+from multiprocessing import Process
+from multiprocessing.connection import Client, Listener
 from common.operation import Operation
+from os import getenv
 
 STOP = 0
 NEW_DATA = 1
@@ -8,11 +10,16 @@ IN_PROCESS = 0
 FINISHED = 1
 SENT = 2
 
+address = ('localhost', 6000)
+
 class OperationsManager():
     def __init__(self, storage):
-        self.queue = SimpleQueue()
+        self.listener = Listener(address, authkey=b'secret password')
+        print("Listener created")
+        self.listener_conn = None
         self.storage = storage
         self.current_ops = self.storage.read_operations_state()
+        self.transmit_manager = None
 
         print("Starting with: ", self.current_ops)
 
@@ -37,27 +44,38 @@ class OperationsManager():
     def start(self):
         self.p = Process(target=self.run)
         self.p.start()
+        self.listener_conn = self.listener.accept()
+        print("Listener conn created")
         
     def stop(self):
-        self.queue.put(STOP)
+        self.listener_conn.send(STOP)
         self.p.join()
         print("Operation manager stopped")
 
     def run(self):
         print("Running with: ", self.current_ops)
+        client = Client(address, authkey=b'secret password')
+        print("Client created")
 
-        while self.queue.get() != STOP:
-            [operation_data, status] = self.queue.get()
+        while client.recv() != STOP:
+            [operation_data, status] = client.recv()
+            print(f'Got an operation id {operation_data["id"]} with status {status}')
 
             print(operation_data)
 
             operation = Operation(
                 operation_data["id"],
-                operation_data["params"]
+                operation_data["params"],
+                operation_data["cron"],
+                operation_data["times_per_minute"],
+                operation_data["stop_time"]
             )
 
             if status == SENT:
                 self.delete_operation(operation)
+            elif status == FINISHED:
+                self.transmit_manager.notify_end_operation(operation)
+                self.storage.mark_operation_finished(operation)
             else:
                 self.current_ops[operation] = status
 
@@ -67,18 +85,13 @@ class OperationsManager():
 
         print("Operation manager ending its work...")
 
-    def add_operation(self, operation):
-        self.queue.put(NEW_DATA)
-        self.queue.put([operation.data(), IN_PROCESS])
-
     def end_operation(self, operation):
-        self.storage.mark_operation_finished(operation)
-        self.queue.put(NEW_DATA)
-        self.queue.put([operation.data(), FINISHED])
+        self.listener_conn.send(NEW_DATA)
+        self.listener_conn.send([operation.data(), FINISHED])
 
     def remove_operation(self, operation):
-        self.queue.put(NEW_DATA)
-        self.queue.put([operation.data(), SENT])
+        self.listener_conn.send(NEW_DATA)
+        self.listener_conn.send([operation.data(), SENT])
 
     def save_current_status(self):
         self.storage.save_operations_state(self.current_ops)
