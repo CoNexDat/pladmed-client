@@ -9,10 +9,11 @@ RUN apk add gcc g++ libffi-dev musl-dev zlib-dev linux-headers make bind-tools \
 RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
 RUN python3 -m ensurepip
 RUN pip3 install --no-cache --upgrade pip setuptools
-RUN pip3 install python-socketio[client]
 RUN pip3 install python-socketio[client] --upgrade
 RUN pip3 install atomicwrites==1.4.0
 RUN pip3 install tcconfig==0.26.0
+RUN pip3 install python-crontab
+RUN pip3 install croniter
 
 RUN apk del gcc g++ libffi-dev musl-dev zlib-dev linux-headers make python3-dev
 

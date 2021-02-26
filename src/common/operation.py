@@ -1,12 +1,15 @@
 from common.communicator import TASK_SENT, TASK_FINISHED, IN_PROCESS
 
 class Operation:
-    def __init__(self, id_, params, credits_):
+    def __init__(self, id_, params, credits_, cron, times_per_minute, stop_time):
         self.id = id_
         self.params = params
         self.credits = credits_
         self.tasks = []
-        self.status = IN_PROCESS
+        self.status = IN_PROCESS,
+        self.cron = cron,
+        self.times_per_minute = times_per_minute,
+        self.stop_time = stop_time
     
     def add_task(self, task):
         self.tasks.append(task)

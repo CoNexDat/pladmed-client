@@ -7,6 +7,7 @@ import socketio
 import time
 import os
 import re
+import subprocess
 from multiprocessing import Process
 from common.operations_manager import OperationsManager
 from utils.credits import rates_to_credits
@@ -39,6 +40,7 @@ def config_connection(client):
         client.ping(data["_id"], data["params"], 10)#data["credits"])
         
 def connect_to_server(client):
+    subprocess.run("crond")
     token = os.getenv('TOKEN', 'token')
 
     running = True

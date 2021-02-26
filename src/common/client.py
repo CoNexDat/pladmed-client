@@ -49,7 +49,7 @@ class Client:
 
         sub_cmd = self.parser.parse_traceroute(params)
 
-        operation = Operation(op_id, sub_cmd, credits_)
+        operation = Operation(op_id, sub_cmd, credits_, params["cron"], params["times_per_minute"], params["stop_time"])
 
         self.operations_manager.add_operation(operation)
 
@@ -57,6 +57,6 @@ class Client:
         # Params must be a dict with params
         sub_cmd = self.parser.parse_ping(params)
 
-        operation = Operation(op_id, sub_cmd, credits_)
+        operation = Operation(op_id, sub_cmd, credits_, params["cron"], params["times_per_minute"], params["stop_time"])
 
         self.operations_manager.add_operation(operation)

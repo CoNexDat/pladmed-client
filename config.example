@@ -1,1 +1,3 @@
 TOKEN=<Place your token here>
+FINISH_OPERATION_PORT=<The port where stopper.py notifies finished operations with the system>
+FINISH_TASK_PORT=<The port where scamper.py notifies finished tasks>
