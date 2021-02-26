@@ -67,6 +67,8 @@ def main():
         config.TMP_FOLDER
     )
     
+    storage.clean_tmp_folder()
+    
     operation_rate = os.getenv("OPERATIONS_RATE")
 
     [max_rate, unit] = re.findall(r'[A-Za-z]+|\d+', operation_rate)
@@ -79,8 +81,6 @@ def main():
     max_credits = rates_to_credits(int(max_rate), unit)
 
     client = Client(sio, storage, max_credits)  
-
-    #TODO: Clean TMP files
 
     connect_to_server(client)
 

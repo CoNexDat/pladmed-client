@@ -1,4 +1,4 @@
-from os import path, remove, makedirs
+from os import path, remove, makedirs, listdir
 from utils.atomic_writer import AtomicWriter
 
 class Storage:
@@ -10,6 +10,10 @@ class Storage:
         self.tmp_folder = tmp_folder
         self.state_file = state_file
         self.writer = AtomicWriter()
+
+    def clean_tmp_folder(self):
+        for file_ in listdir(self.tmp_folder):
+            remove(self.tmp_folder + file_)
 
     def operation_filename(self, task):
         file_storage = self.store_in + task.code
