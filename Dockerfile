@@ -17,7 +17,7 @@ RUN crontab /etc/cron.d/timesync
 
 # Install client app's Python modules and their dependencies
 RUN apk add gcc g++ libffi-dev musl-dev zlib-dev linux-headers make bind-tools \
-    && cd scamper && ./configure && make && make install
+    iproute2 python3-dev && cd scamper && ./configure && make && make install
 
 RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
 RUN python3 -m ensurepip
@@ -34,7 +34,7 @@ RUN make install
 
 # Remove dependencies which will not be needed in runtime
 RUN rm -rf /libfaketime/master
-RUN apk del gcc g++ libffi-dev musl-dev zlib-dev linux-headers make
+RUN apk del gcc g++ libffi-dev musl-dev zlib-dev linux-headers make python3-dev
 
 ENV HOME=/src
 WORKDIR $HOME

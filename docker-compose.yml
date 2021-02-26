@@ -3,8 +3,8 @@ services:
   client:
     container_name: client
     image: client:latest
-    entrypoint: ../docker-entrypoint.sh
     command: python3 main.py
+    entrypoint: ../docker-entrypoint.sh
     environment:
       - FAKETIME_DONT_RESET=1
       - LD_PRELOAD=/usr/local/lib/faketime/libfaketime.so.1
@@ -14,4 +14,5 @@ services:
     volumes:
       - ./src:/src
       - ./safe_storage:/safe_storage
-    network_mode: host
+    cap_add:
+      - NET_ADMIN

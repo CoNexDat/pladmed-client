@@ -7,81 +7,68 @@ from utils.params_parser import ParamsParser
 from common.transmit_manager import TransmitManager
 from common.operations_manager import OperationsManager
 from common.operation import Operation
-import uuid
+from common.communicator import Communicator
 import time
 
 class Client:
-    def __init__(self, sio, storage, operations_manager):
+    def __init__(self, sio, storage, max_credits):
         self.sio = sio
         self.parser = ParamsParser()
         self.storage = storage
-        self.operations_manager = operations_manager  
+        
+        self.communicator = Communicator()
+
+        self.operations_manager = OperationsManager(storage, self.communicator)
+
         self.transmit_manager = TransmitManager(
             self.sio,
-            self.storage,
-            self.operations_manager
+            storage,
+            self.communicator
         )
 
-        self.execute_pending_tasks()
-    
-    def execute_pending_tasks(self):
-        finished_ops = self.operations_manager.finished_operations()
-        in_process_ops = self.operations_manager.in_process_operations()
+        print("Client with availability for up to: ", max_credits, " creditos")
 
-        # Notify pending operations to transmit manager
-        for operation in finished_ops:
-            self.transmit_manager.notify_end_operation(operation)
+        self.max_credits = max_credits
 
-        # Execute pending operations
-        for operation in in_process_ops:
-            self.execute_scamper(operation)
+        self.operations_manager.start()
 
     def connect(self):
         print("Client connected")
-        self.operations_manager.start()
         self.transmit_manager.start()
 
     def disconnect(self):
         print("Client disconnected")
 
         self.transmit_manager.stop()
-        self.operations_manager.stop()
 
-    def traceroute(self, op_id, params):
+    def traceroute(self, op_id, params, credits_):
         # Params must be a dict with params
+        actual_credits = self.communicator.get_current_credits()
+
+        print("Credits in use: ", actual_credits, "/", self.max_credits)
+
+        if actual_credits + credits_ > self.max_credits:
+            print("No available credits for this operation")
+            return
+            
         sub_cmd = self.parser.parse_traceroute(params)
 
-        unique_code = str(uuid.uuid4())
-
-        operation = Operation(op_id, sub_cmd, unique_code)
-
-        result = self.execute_scamper(operation)
-
-    def ping(self, op_id, params):
-        # Params must be a dict with params
-        sub_cmd = self.parser.parse_ping(params)
-
-        unique_code = str(uuid.uuid4())
-
-        operation = Operation(op_id, sub_cmd, unique_code)
-
-        result = self.execute_scamper(operation)
-
-    def execute_scamper(self, operation):
-        print("Executing scamper -c with params: ", operation.params)
+        operation = Operation(op_id, sub_cmd, credits_)
 
         self.operations_manager.add_operation(operation)
 
-        subprocess.run(
-            [
-                "scamper",
-                "-O",
-                "warts",
-                "-o",
-                self.storage.operation_filename_tmp(operation),
-                "-c"
-            ] + operation.params
-        )
+    def ping(self, op_id, params, credits_):
+        # Params must be a dict with params
+        actual_credits = self.communicator.get_current_credits()
 
-        self.operations_manager.end_operation(operation)
-        self.transmit_manager.notify_end_operation(operation)
+        print("Credits in use: ", actual_credits, "/", self.max_credits)
+
+        if actual_credits + credits_ > self.max_credits:
+            print("No available credits for this operation")
+            return
+
+        sub_cmd = self.parser.parse_ping(params)
+
+        operation = Operation(op_id, sub_cmd, credits_)
+
+        self.operations_manager.add_operation(operation)

@@ -1,4 +1,4 @@
-from os import path, remove, makedirs
+from os import path, remove, makedirs, listdir
 from utils.atomic_writer import AtomicWriter
 
 class Storage:
@@ -11,34 +11,25 @@ class Storage:
         self.state_file = state_file
         self.writer = AtomicWriter()
 
-    def define_operation_filename(self, operation):
-        filename = operation.id
+    def clean_tmp_folder(self):
+        for file_ in listdir(self.tmp_folder):
+            remove(self.tmp_folder + file_)
 
-        i = 1
-
-        while (path.exists(self.store_in + filename)):
-            filename = operation.id + "_part_" + str(i)
-
-        return filename        
-
-    def operation_filename(self, operation):
-        file_storage = self.store_in + self.define_operation_filename(operation)
+    def operation_filename(self, task):
+        file_storage = self.store_in + task.code
 
         return file_storage 
 
-    def operation_filename_tmp(self, operation):
-        tmp_path = self.tmp_folder + self.define_operation_filename(operation)
+    def operation_filename_tmp(self, task):
+        tmp_path = self.tmp_folder + task.code
 
         return tmp_path
 
-    def operation_filename(self, operation):
-        return self.store_in + operation.id
-
-    def mark_operation_finished(self, operation):
+    def mark_task_finished(self, task):
         try:
             self.writer.move(
-                self.operation_filename_tmp(operation),
-                self.operation_filename(operation)
+                self.operation_filename_tmp(task),
+                self.operation_filename(task)
             )
         except:
             # In this case, the dst file already exists, which means
@@ -47,9 +38,9 @@ class Storage:
             # the results of a previus operation and new results are not needed
             pass
 
-    def remove_operation(self, operation):
+    def remove_task(self, task):
         try:
-            remove(self.store_in + operation.id)
+            remove(self.store_in + task.code)
         except:
             pass
 

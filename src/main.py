@@ -7,8 +7,10 @@ import timesync.sync as timesync
 import socketio
 import time
 import os
+import re
 from multiprocessing import Process
 from common.operations_manager import OperationsManager
+from utils.credits import rates_to_credits
 
 
 def config_connection(client):
@@ -17,11 +19,7 @@ def config_connection(client):
     @client.sio.event
     def connect():
         client.connect()
-
-        #p = Process(target=transmitter_process, args=(client, ))
-        # p.start()
-        # processes.append(p)
-
+        
     @client.sio.event
     def connect_error(message):
         print("Conn error: ", message)
@@ -31,22 +29,17 @@ def config_connection(client):
         # This is only called for the process who contains all the other processes
         client.disconnect()
 
-        # for p in processes:
-        #    print("Waiting for processes")
-        #    p.join()
-
         print("All processes finished")
 
     @client.sio.on('traceroute')
     def on_traceroute(data):
         print("Traceroute received")
-        client.traceroute(data["_id"], data["params"])
+        client.traceroute(data["_id"], data["params"], 10)#data["credits"])
 
     @client.sio.on('ping')
     def on_ping(data):
-        client.ping(data["_id"], data["params"])
-
-
+        client.ping(data["_id"], data["params"], 10)#data["credits"])
+        
 def connect_to_server(client):
     token = os.getenv('TOKEN', 'token')
 
@@ -56,7 +49,10 @@ def connect_to_server(client):
 
     while running:
         try:
-            client.sio.connect(config.HOST + "?token=" + token)
+            client.sio.connect(
+                url=config.HOST + "?token=" + token,
+                transports='websocket'
+            )
 
             client.sio.wait
 
@@ -74,14 +70,26 @@ def main():
         config.STATE_FILE,
         config.TMP_FOLDER
     )
+    
+    storage.clean_tmp_folder()
+    
+    operation_rate = os.getenv("OPERATIONS_RATE")
 
-    operations_manager = OperationsManager(storage)
+    [max_rate, unit] = re.findall(r'[A-Za-z]+|\d+', operation_rate)
 
-    client = Client(sio, storage, operations_manager)
+    # Temporary accept only Kbps
+    if unit != "Kbps":
+        print("Operation rate is not in Kbps")
+        return
+
+    max_credits = rates_to_credits(int(max_rate), unit)
+
+    client = Client(sio, storage, max_credits)  
 
     connect_to_server(client)
-    timesync.listen()
 
+    #TODO Does this get called?
+    timesync.listen()
 
 if __name__ == "__main__":
     main()

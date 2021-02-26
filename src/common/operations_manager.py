@@ -1,89 +1,160 @@
 from multiprocessing import Process, SimpleQueue
 from common.operation import Operation
-
-STOP = 0
-NEW_DATA = 1
-
-IN_PROCESS = 0
-FINISHED = 1
-SENT = 2
+from common.task import Task
+import subprocess
+from common.communicator import (
+    STOP,
+    NEW_DATA,
+    IN_PROCESS,
+    FINISHED,
+    TASK_FINISHED,
+    TASK_SENT,
+    CREDITS
+)
+import uuid
 
 class OperationsManager():
-    def __init__(self, storage):
-        self.queue = SimpleQueue()
+    def __init__(self, storage, communicator):
         self.storage = storage
+        self.communicator = communicator
         self.current_ops = self.storage.read_operations_state()
 
-        print("Starting with: ", self.current_ops)
+        #TODO: Remove
+        self.processes = []
 
-    def in_process_operations(self):
-        operations = []
+        self.recover_state()
 
-        for op in self.current_ops:
-            if self.current_ops[op] == IN_PROCESS:
-                operations.append(op)
+    def actual_credits(self):
+        total_credits = 0
+
+        for operation in self.current_ops.values():
+            total_credits += operation.credits
         
-        return operations        
+        return total_credits
 
-    def finished_operations(self):
-        operations = []
+    def recover_state(self):
+        for operation in self.current_ops.values():
+            if operation.status == IN_PROCESS:
+                self.schedule_operation(operation)
 
-        for op in self.current_ops:
-            if self.current_ops[op] == FINISHED:
-                operations.append(op)
-        
-        return operations
+        for operation in list(self.current_ops.values()):
+            self.check_operation_finished(operation)
+
+        for operation in self.current_ops.values():
+            finished_tasks = operation.finished_tasks()
+
+            for task in finished_tasks:
+                self.communicator.notify_end_task(operation, task)   
 
     def start(self):
+        self.current_ops = self.storage.read_operations_state()
+        
         self.p = Process(target=self.run)
         self.p.start()
         
     def stop(self):
-        self.queue.put(STOP)
+        self.communicator.stop_operations()
         self.p.join()
+
+        for p in self.processes:
+            p.join()
+
         print("Operation manager stopped")
 
     def run(self):
         print("Running with: ", self.current_ops)
 
-        while self.queue.get() != STOP:
-            [operation_data, status] = self.queue.get()
+        data = self.communicator.read_operations()
 
-            print(operation_data)
+        while data[0] != STOP:
+            status = data[1]
 
-            operation = Operation(
-                operation_data["id"],
-                operation_data["params"],
-                operation_data["unique_code"]
-            )
-
-            if status == SENT:
-                self.delete_operation(operation)
+            if status == CREDITS:
+                self.communicator.notify_current_credits(self.actual_credits())
             else:
-                self.current_ops[operation] = status
+                operation_data = data[2]
+                op_id = operation_data["id"]
 
-            self.save_current_status()
+                if status == IN_PROCESS:
+                    print("New operation income")
+                    operation = Operation(
+                        operation_data["id"],
+                        operation_data["params"],
+                        operation_data["credits"]
+                    )
 
-            print("Current ops after: ", self.current_ops)
+                    self.schedule_operation(operation)
+                    self.current_ops[op_id] = operation
+
+                elif status == TASK_FINISHED:
+                    print("New task finished income")
+                    task_data = data[3]
+
+                    task = Task(task_data["code"])
+
+                    self.storage.mark_task_finished(task)
+                    self.current_ops[op_id].add_task(task)
+                    self.communicator.notify_end_task(self.current_ops[op_id], task)
+
+                elif status == FINISHED:
+                    print("Operation finished")
+
+                    self.current_ops[op_id].status = FINISHED
+                    self.check_operation_finished(self.current_ops[op_id])
+
+                elif status == TASK_SENT:
+                    print("Task sent income")
+                    task_data = data[3]
+
+                    task = Task(task_data["code"])
+
+                    self.current_ops[op_id].update_task(task, TASK_SENT)
+                    # Save so that a sent task doesn't re-send in case of crash
+                    self.save_current_status()
+                    self.storage.remove_task(task)
+                    self.check_operation_finished(self.current_ops[op_id])
+
+                self.save_current_status()
+                
+                print("Current ops after: ", self.current_ops)
+
+            data = self.communicator.read_operations()
 
         print("Operation manager ending its work...")
 
     def add_operation(self, operation):
-        self.queue.put(NEW_DATA)
-        self.queue.put([operation.data(), IN_PROCESS])
+        self.communicator.add_operation(operation)
 
-    def end_operation(self, operation):
-        self.storage.mark_operation_finished(operation)
-        self.queue.put(NEW_DATA)
-        self.queue.put([operation.data(), FINISHED])
-
-    def remove_operation(self, operation):
-        self.queue.put(NEW_DATA)
-        self.queue.put([operation.data(), SENT])
+    def check_operation_finished(self, operation):
+        if operation.status == FINISHED and operation.all_task_sent():
+            del self.current_ops[operation.id]
 
     def save_current_status(self):
         self.storage.save_operations_state(self.current_ops)
 
-    def delete_operation(self, operation):
-        self.storage.remove_operation(operation)
-        del self.current_ops[operation]
+    def schedule_operation(self, operation):
+        # TODO: Schedule in Cron...
+        # Temporary execute scamper here
+        print("Scheduling: ", operation)
+        p = Process(target=self.execute_scamper, args=(operation, ))
+        p.start()
+        self.processes.append(p)
+
+    def execute_scamper(self, operation):        
+        for i in range(0, 5):
+            task = Task(str(uuid.uuid4()))
+
+            subprocess.run(
+                [
+                    "scamper",
+                    "-O",
+                    "warts",
+                    "-o",
+                    self.storage.operation_filename_tmp(task),
+                    "-c"
+                ] + operation.params
+            )
+
+            self.communicator.finish_task(operation, task)
+
+        self.communicator.finish_operation(operation)

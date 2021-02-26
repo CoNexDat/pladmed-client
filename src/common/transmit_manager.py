@@ -2,44 +2,55 @@ from multiprocessing import Process, SimpleQueue
 from config.connection import RESULT_FOLDER
 import subprocess
 from common.operation import Operation
+import os
+from common.task import Task
 
 STOP = 0
 NEW_RESULTS = 1
 
 class TransmitManager():
-    def __init__(self, sio, storage, operations_manager):
+    def __init__(self, sio, storage, communicator):
         self.sio = sio
-        self.queue = SimpleQueue()
         self.storage = storage
-        self.operations_manager = operations_manager
+        self.communicator = communicator
     
     def run(self):
         self.start()
 
     def start(self):        
-        while self.queue.get() != STOP:
-            operation_data = self.queue.get()
+        data = self.communicator.read_transmit()
+
+        while data[0] != STOP:
+            operation_data = data[1]
+            task_data = data[2]
+
+            task = Task(task_data["code"])
 
             operation = Operation(
                 operation_data["id"],
                 operation_data["params"],
-                operation_data["unique_code"]
+                operation_data["credits"]
             )
 
-            print("Got finished operation: ", operation)
+            print("Got finished task: ", task.code, " for operation: ", operation.id)
 
             def ack(operation_id):
                 # If operation was successfully saved in the server
                 if operation_id == operation.id:
-                    self.operations_manager.remove_operation(operation)
+                    print("Successfully sent task: ", task.code, " for operation: ", operation.id)
+                    self.communicator.sent_task(operation, task)
 
             # Send operation to server
-            self.send_results(operation, ack)
+            self.send_results(operation, task, ack)
+
+            data = self.communicator.read_transmit()
 
         print("Transmit manager ending its work...")
 
-    def send_results(self, operation, callback):
-        filename = self.storage.operation_filename(operation)
+    def send_results(self, operation, task, callback):
+        filename = self.storage.operation_filename(task)
+
+        print("Sending file size: ", os.path.getsize(filename))
 
         with open(filename, 'rb') as f:
             content = f.read()
@@ -47,7 +58,7 @@ class TransmitManager():
             data_to_send = {
                 "operation_id": operation.id,
                 "content": content,
-                "unique_code": operation.unique_code
+                "unique_code": task.code
             }
 
             self.sio.emit(
@@ -58,8 +69,4 @@ class TransmitManager():
             )
 
     def stop(self):
-        self.queue.put(STOP)
-
-    def notify_end_operation(self, operation):
-        self.queue.put(NEW_RESULTS)
-        self.queue.put(operation.data())
+        self.communicator.stop_transmit()

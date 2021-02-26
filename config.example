@@ -1,2 +1,4 @@
 TOKEN=<Place your token here>
 NTP_SERVER=pool.ntp.org
+UPLOAD_RATE=30Kbps
+OPERATIONS_RATE=70Kbps
