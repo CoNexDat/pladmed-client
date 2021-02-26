@@ -47,6 +47,10 @@ class Client:
 
         print("Credits in use: ", actual_credits, "/", self.max_credits)
 
+        if actual_credits + credits_ > self.max_credits:
+            print("No available credits for this operation")
+            return
+            
         sub_cmd = self.parser.parse_traceroute(params)
 
         operation = Operation(op_id, sub_cmd, credits_)
@@ -55,6 +59,14 @@ class Client:
 
     def ping(self, op_id, params, credits_):
         # Params must be a dict with params
+        actual_credits = self.communicator.get_current_credits()
+
+        print("Credits in use: ", actual_credits, "/", self.max_credits)
+
+        if actual_credits + credits_ > self.max_credits:
+            print("No available credits for this operation")
+            return
+
         sub_cmd = self.parser.parse_ping(params)
 
         operation = Operation(op_id, sub_cmd, credits_)
