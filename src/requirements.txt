@@ -1,0 +1,5 @@
+-i https://pypi.org/simple/
+scamper-pywarts==0.2.1
+python-socketio[client]==5.0.4
+atomicwrites==1.4.0
+tcconfig==0.26.0

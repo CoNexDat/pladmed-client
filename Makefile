@@ -4,11 +4,10 @@ PWD := $(shell pwd)
 all:
 
 build:
-	docker build -f ./Dockerfile -t "client:latest" .
+	docker build -f ./Dockerfile -t "client:latest" --build-arg SYNC_TIME=12 .
 .PHONY: build
 
 start: build
-	#docker run --rm --network host -v /src:/src client:latest
 	docker-compose up --d
 .PHONY: start
 

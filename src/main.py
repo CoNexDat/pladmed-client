@@ -3,6 +3,7 @@
 from common.client import Client
 from common.storage import Storage
 import config.connection as config
+import timesync.sync as timesync
 import socketio
 import time
 import os
@@ -10,6 +11,7 @@ import re
 from multiprocessing import Process
 from common.operations_manager import OperationsManager
 from utils.credits import rates_to_credits
+
 
 def config_connection(client):
     processes = []
@@ -58,8 +60,10 @@ def connect_to_server(client):
         except:
             time.sleep(config.DELAY_BETWEEN_RETRY)
 
+
 def main():
-    sio = socketio.Client(engineio_logger=True, reconnection=True, reconnection_attempts=0)
+    sio = socketio.Client(engineio_logger=True,
+                          reconnection=True, reconnection_attempts=0)
 
     storage = Storage(
         config.RESULT_FOLDER,
@@ -83,6 +87,9 @@ def main():
     client = Client(sio, storage, max_credits)  
 
     connect_to_server(client)
+
+    #TODO Does this get called?
+    timesync.listen()
 
 if __name__ == "__main__":
     main()
