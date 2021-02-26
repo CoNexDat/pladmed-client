@@ -6,8 +6,10 @@ import config.connection as config
 import socketio
 import time
 import os
+import re
 from multiprocessing import Process
 from common.operations_manager import OperationsManager
+from utils.credits import rates_to_credits
 
 def config_connection(client):
     processes = []
@@ -15,11 +17,7 @@ def config_connection(client):
     @client.sio.event
     def connect():
         client.connect()
-
-        #p = Process(target=transmitter_process, args=(client, ))
-        #p.start()
-        #processes.append(p)
-
+        
     @client.sio.event
     def connect_error(message):
         print("Conn error: ", message)
@@ -29,20 +27,16 @@ def config_connection(client):
         # This is only called for the process who contains all the other processes
         client.disconnect()
 
-        #for p in processes:
-        #    print("Waiting for processes")
-        #    p.join()
-
         print("All processes finished")
 
     @client.sio.on('traceroute')
     def on_traceroute(data):
         print("Traceroute received")
-        client.traceroute(data["_id"], data["params"])
+        client.traceroute(data["_id"], data["params"], 10)#data["credits"])
 
     @client.sio.on('ping')
     def on_ping(data):
-        client.ping(data["_id"], data["params"])
+        client.ping(data["_id"], data["params"], 10)#data["credits"])
         
 def connect_to_server(client):
     token = os.getenv('TOKEN', 'token')
@@ -73,9 +67,20 @@ def main():
         config.TMP_FOLDER
     )
     
-    operations_manager = OperationsManager(storage)
+    operation_rate = os.getenv("OPERATIONS_RATE")
 
-    client = Client(sio, storage, operations_manager)  
+    [max_rate, unit] = re.findall(r'[A-Za-z]+|\d+', operation_rate)
+
+    # Temporary accept only Kbps
+    if unit != "Kbps":
+        print("Operation rate is not in Kbps")
+        return
+
+    max_credits = rates_to_credits(int(max_rate), unit)
+
+    client = Client(sio, storage, max_credits)  
+
+    #TODO: Clean TMP files
 
     connect_to_server(client)
 
