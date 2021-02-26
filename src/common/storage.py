@@ -11,34 +11,21 @@ class Storage:
         self.state_file = state_file
         self.writer = AtomicWriter()
 
-    def define_operation_filename(self, task_code):
-        filename = task_code
-
-        i = 1
-
-        while (path.exists(self.store_in + filename)):
-            filename = task_code + "_part_" + str(i)
-
-        return filename
-
-    def operation_filename(self, task_code):
-        file_storage = self.store_in + self.define_operation_filename(task_code)
+    def operation_filename(self, task):
+        file_storage = self.store_in + task.code
 
         return file_storage 
 
-    def operation_filename_tmp(self, task_code):
-        tmp_path = self.tmp_folder + self.define_operation_filename(task_code)
+    def operation_filename_tmp(self, task):
+        tmp_path = self.tmp_folder + task.code
 
         return tmp_path
-
-    def operation_filename(self, task_code):
-        return self.store_in + task_code
 
     def mark_task_finished(self, task):
         try:
             self.writer.move(
-                self.operation_filename_tmp(task.code),
-                self.operation_filename(task.code)
+                self.operation_filename_tmp(task),
+                self.operation_filename(task)
             )
         except:
             # In this case, the dst file already exists, which means
@@ -47,9 +34,9 @@ class Storage:
             # the results of a previus operation and new results are not needed
             pass
 
-    def remove_task(self, task_code):
+    def remove_task(self, task):
         try:
-            remove(self.store_in + task_code)
+            remove(self.store_in + task.code)
         except:
             pass
 

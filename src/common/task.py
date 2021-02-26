@@ -4,6 +4,9 @@ class Task:
     def __init__(self, code):
         self.code = code
         self.status = TASK_FINISHED
+    
+    def data(self):
+        return self.__dict__
 
     def __eq__(self, other):
         return self.code == other.code

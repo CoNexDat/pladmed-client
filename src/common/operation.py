@@ -13,7 +13,7 @@ class Operation:
 
     def update_task(self, a_task, status):
         for task in self.tasks:
-            if task.code == a_task:
+            if task == a_task:
                 task.status = status
 
     def all_task_sent(self):

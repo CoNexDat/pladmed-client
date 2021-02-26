@@ -44,7 +44,7 @@ class OperationsManager():
             finished_tasks = operation.finished_tasks()
 
             for task in finished_tasks:
-                self.communicator.notify_end_task(operation, task.code)   
+                self.communicator.notify_end_task(operation, task)   
 
     def start(self):
         self.current_ops = self.storage.read_operations_state()
@@ -88,13 +88,13 @@ class OperationsManager():
 
                 elif status == TASK_FINISHED:
                     print("New task finished income")
-                    task_code = data[3]
+                    task_data = data[3]
 
-                    task = Task(task_code)
+                    task = Task(task_data["code"])
 
                     self.storage.mark_task_finished(task)
                     self.current_ops[op_id].add_task(task)
-                    self.communicator.notify_end_task(self.current_ops[op_id], task.code)
+                    self.communicator.notify_end_task(self.current_ops[op_id], task)
 
                 elif status == FINISHED:
                     print("Operation finished")
@@ -104,12 +104,14 @@ class OperationsManager():
 
                 elif status == TASK_SENT:
                     print("Task sent income")
-                    task_code = data[3]
+                    task_data = data[3]
 
-                    self.current_ops[op_id].update_task(task_code, TASK_SENT)
+                    task = Task(task_data["code"])
+
+                    self.current_ops[op_id].update_task(task, TASK_SENT)
                     # Save so that a sent task doesn't re-send in case of crash
                     self.save_current_status()
-                    self.storage.remove_task(task_code)
+                    self.storage.remove_task(task)
                     self.check_operation_finished(self.current_ops[op_id])
 
                 self.save_current_status()
@@ -140,7 +142,7 @@ class OperationsManager():
 
     def execute_scamper(self, operation):        
         for i in range(0, 5):
-            task_code = str(uuid.uuid4())
+            task = Task(str(uuid.uuid4()))
 
             subprocess.run(
                 [
@@ -148,11 +150,11 @@ class OperationsManager():
                     "-O",
                     "warts",
                     "-o",
-                    self.storage.operation_filename_tmp(task_code),
+                    self.storage.operation_filename_tmp(task),
                     "-c"
                 ] + operation.params
             )
 
-            self.communicator.finish_task(operation, task_code)
+            self.communicator.finish_task(operation, task)
 
         self.communicator.finish_operation(operation)

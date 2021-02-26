@@ -32,20 +32,20 @@ class Communicator:
             operation.data()
         ])
     
-    def finish_task(self, operation, task_code):
+    def finish_task(self, operation, task):
         self.operations_queue.put([
             NEW_DATA,
             TASK_FINISHED,
             operation.data(),
-            task_code
+            task.data()
         ])
 
-    def sent_task(self, operation, task_code):
+    def sent_task(self, operation, task):
         self.operations_queue.put([
             NEW_DATA,
             TASK_SENT,
             operation.data(),
-            task_code
+            task.data()
         ])
 
     def stop_operations(self):
@@ -57,11 +57,11 @@ class Communicator:
     def stop_transmit(self):
         self.transmit_queue.put([STOP])
 
-    def notify_end_task(self, operation, task_code):
+    def notify_end_task(self, operation, task):
         self.transmit_queue.put([
             NEW_DATA,
             operation.data(),
-            task_code
+            task.data()
         ])
 
     def get_current_credits(self):

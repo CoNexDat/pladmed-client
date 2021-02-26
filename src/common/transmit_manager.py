@@ -3,6 +3,7 @@ from config.connection import RESULT_FOLDER
 import subprocess
 from common.operation import Operation
 import os
+from common.task import Task
 
 STOP = 0
 NEW_RESULTS = 1
@@ -21,7 +22,9 @@ class TransmitManager():
 
         while data[0] != STOP:
             operation_data = data[1]
-            task_code = data[2]
+            task_data = data[2]
+
+            task = Task(task_data["code"])
 
             operation = Operation(
                 operation_data["id"],
@@ -29,23 +32,23 @@ class TransmitManager():
                 operation_data["credits"]
             )
 
-            print("Got finished task: ", task_code, " for operation: ", operation.id)
+            print("Got finished task: ", task.code, " for operation: ", operation.id)
 
             def ack(operation_id):
                 # If operation was successfully saved in the server
                 if operation_id == operation.id:
-                    print("Successfully sent task: ", task_code, " for operation: ", operation.id)
-                    self.communicator.sent_task(operation, task_code)
+                    print("Successfully sent task: ", task.code, " for operation: ", operation.id)
+                    self.communicator.sent_task(operation, task)
 
             # Send operation to server
-            self.send_results(operation, task_code, ack)
+            self.send_results(operation, task, ack)
 
             data = self.communicator.read_transmit()
 
         print("Transmit manager ending its work...")
 
-    def send_results(self, operation, task_code, callback):
-        filename = self.storage.operation_filename(task_code)
+    def send_results(self, operation, task, callback):
+        filename = self.storage.operation_filename(task)
 
         print("Sending file size: ", os.path.getsize(filename))
 
@@ -55,7 +58,7 @@ class TransmitManager():
             data_to_send = {
                 "operation_id": operation.id,
                 "content": content,
-                "unique_code": task_code
+                "unique_code": task.code
             }
 
             self.sio.emit(
