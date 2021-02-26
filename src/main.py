@@ -43,23 +43,20 @@ def config_connection(client):
 def connect_to_server(client):
     token = os.getenv('TOKEN', 'token')
 
-    running = True
+    connected = False
 
     config_connection(client)
 
-    while running:
+    while not connected:
         try:
             client.sio.connect(
                 url=config.HOST + "?token=" + token,
                 transports='websocket'
             )
 
-            client.sio.wait
-
-            running = False
+            connected = True
         except:
             time.sleep(config.DELAY_BETWEEN_RETRY)
-
 
 def main():
     sio = socketio.Client(engineio_logger=True,
@@ -88,7 +85,6 @@ def main():
 
     connect_to_server(client)
 
-    #TODO Does this get called?
     timesync.listen()
 
 if __name__ == "__main__":
