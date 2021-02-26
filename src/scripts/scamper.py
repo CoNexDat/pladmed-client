@@ -2,6 +2,7 @@ import subprocess
 import sys
 import time
 import uuid
+import json
 from multiprocessing.connection import Listener
 from os import path, getenv
 
@@ -21,9 +22,13 @@ def create_operation_filename(task_code):
     return file_storage
 
 
-def end_task(operation_str, listener):
+def end_task(operation_str, task_code, listener):
     print(f'Sending to FinishTaskCommunicator operation {operation_str}')
-    listener.send(operation_str)
+    finished_task_data = {
+        "operation": json.loads(operation_str),
+        "task_code": task_code
+    }
+    listener.send(json.dumps(finished_task_data))
 
 
 def main():
@@ -52,7 +57,7 @@ def main():
             ] + sub_cmd
         )
         time.sleep(max(60/times_per_minute - int(time.time() - start), 0))
-        end_task(operation_str, conn)
+        end_task(operation_str, task_code, conn)
     conn.close()
 
 

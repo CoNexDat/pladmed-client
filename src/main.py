@@ -3,6 +3,7 @@
 from common.client import Client
 from common.storage import Storage
 import config.connection as config
+import timesync.sync as timesync
 import socketio
 import time
 import os
@@ -11,6 +12,7 @@ import subprocess
 from multiprocessing import Process
 from common.operations_manager import OperationsManager
 from utils.credits import rates_to_credits
+
 
 def config_connection(client):
     processes = []
@@ -40,34 +42,36 @@ def config_connection(client):
         client.ping(data["_id"], data["params"], 10)#data["credits"])
         
 def connect_to_server(client):
-    subprocess.run("crond")
     token = os.getenv('TOKEN', 'token')
 
-    running = True
+    connected = False
 
     config_connection(client)
 
-    while running:
+    while not connected:
         try:
             client.sio.connect(
                 url=config.HOST + "?token=" + token,
                 transports='websocket'
             )
 
-            client.sio.wait
-
-            running = False
+            connected = True
         except:
             time.sleep(config.DELAY_BETWEEN_RETRY)
 
 def main():
-    sio = socketio.Client(engineio_logger=True, reconnection=True, reconnection_attempts=0)
+    sio = socketio.Client(engineio_logger=True,
+                          reconnection=True, reconnection_attempts=0)
+
+    subprocess.run("crond")
 
     storage = Storage(
         config.RESULT_FOLDER,
         config.STATE_FILE,
         config.TMP_FOLDER
     )
+    
+    storage.clean_tmp_folder()
     
     operation_rate = os.getenv("OPERATIONS_RATE")
 
@@ -80,11 +84,11 @@ def main():
 
     max_credits = rates_to_credits(int(max_rate), unit)
 
-    client = Client(sio, storage, max_credits)  
-
-    #TODO: Clean TMP files
+    client = Client(sio, storage, max_credits)
 
     connect_to_server(client)
+
+    timesync.listen()
 
 if __name__ == "__main__":
     main()

@@ -6,6 +6,8 @@ import subprocess
 from utils.params_parser import ParamsParser
 from common.transmit_manager import TransmitManager
 from common.operations_manager import OperationsManager
+from common.finish_task_communicator import FinishTaskCommunicator
+from common.finish_operation_communicator import FinishOperationCommunicator
 from common.operation import Operation
 from common.communicator import Communicator
 import time
@@ -19,6 +21,9 @@ class Client:
         self.communicator = Communicator()
 
         self.operations_manager = OperationsManager(storage, self.communicator)
+
+        self.finish_task_communicator = FinishTaskCommunicator(self.operations_manager)
+        self.finish_operation_communicator = FinishOperationCommunicator(self.operations_manager)
 
         self.transmit_manager = TransmitManager(
             self.sio,
@@ -35,11 +40,15 @@ class Client:
     def connect(self):
         print("Client connected")
         self.transmit_manager.start()
+        self.finish_task_communicator.start()
+        self.finish_operation_communicator.start()
 
     def disconnect(self):
         print("Client disconnected")
 
         self.transmit_manager.stop()
+        self.finish_task_communicator.stop()
+        self.finish_operation_communicator.stop()
 
     def traceroute(self, op_id, params, credits_):
         # Params must be a dict with params
@@ -47,6 +56,10 @@ class Client:
 
         print("Credits in use: ", actual_credits, "/", self.max_credits)
 
+        if actual_credits + credits_ > self.max_credits:
+            print("No available credits for this operation")
+            return
+            
         sub_cmd = self.parser.parse_traceroute(params)
 
         operation = Operation(op_id, sub_cmd, credits_, params["cron"], params["times_per_minute"], params["stop_time"])
@@ -55,6 +68,14 @@ class Client:
 
     def ping(self, op_id, params, credits_):
         # Params must be a dict with params
+        actual_credits = self.communicator.get_current_credits()
+
+        print("Credits in use: ", actual_credits, "/", self.max_credits)
+
+        if actual_credits + credits_ > self.max_credits:
+            print("No available credits for this operation")
+            return
+
         sub_cmd = self.parser.parse_ping(params)
 
         operation = Operation(op_id, sub_cmd, credits_, params["cron"], params["times_per_minute"], params["stop_time"])
