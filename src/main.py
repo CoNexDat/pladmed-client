@@ -1,62 +1,93 @@
 #!/usr/bin/env python3
 
 from common.client import Client
+from common.storage import Storage
 import config.connection as config
+import timesync.sync as timesync
 import socketio
 import time
 import os
-
-sio = socketio.Client(engineio_logger=True,
-                      reconnection=True, reconnection_attempts=0)
-client = Client()
-
-
-@sio.event
-def connect():
-    client.connect()
+import re
+from multiprocessing import Process
+from common.operations_manager import OperationsManager
+from utils.credits import rates_to_credits
 
 
-@sio.event
-def connect_error(message):
-    print("Conn error: ", message)
+def config_connection(client):
+    processes = []
+
+    @client.sio.event
+    def connect():
+        client.connect()
+
+    @client.sio.event
+    def connect_error(message):
+        print("Conn error: ", message)
+
+    @client.sio.event
+    def disconnect():
+        # This is only called for the process who contains all the other processes
+        client.disconnect()
+
+        print("All processes finished")
+
+    @client.sio.on('traceroute')
+    def on_traceroute(data):
+        print("Traceroute received")
+        client.traceroute(data["_id"], data["params"], 10)  # data["credits"])
+
+    @client.sio.on('ping')
+    def on_ping(data):
+        client.ping(data["_id"], data["params"], 10)  # data["credits"])
 
 
-@sio.event
-def disconnect():
-    client.disconnect()
-
-
-@sio.on('traceroute')
-def on_traceroute(data):
-    client.traceroute(data["params"])
-
-
-@sio.on('ping')
-def on_ping(data):
-    client.ping(data["params"])
-
-
-@sio.on('dns')
-def on_dns(data):
-    client.dns(data["params"])
-
-
-def connect_to_server():
+def connect_to_server(client):
     token = os.getenv('TOKEN', 'token')
 
-    running = True
+    connected = False
 
-    while running:
+    config_connection(client)
+
+    while not connected:
         try:
-            sio.connect(config.HOST + "?token=" + token)
-            sio.wait
-            running = False
+            client.sio.connect(
+                url=config.HOST + "?token=" + token,
+                transports='websocket'
+            )
+
+            connected = True
         except:
             time.sleep(config.DELAY_BETWEEN_RETRY)
 
 
 def main():
-    connect_to_server()
+    sio = socketio.Client(engineio_logger=True,
+                          reconnection=True, reconnection_attempts=0)
+
+    storage = Storage(
+        config.RESULT_FOLDER,
+        config.STATE_FILE,
+        config.TMP_FOLDER
+    )
+
+    storage.clean_tmp_folder()
+
+    operation_rate = os.getenv("OPERATIONS_RATE")
+
+    [max_rate, unit] = re.findall(r'[A-Za-z]+|\d+', operation_rate)
+
+    # Temporary accept only Kbps
+    if unit != "Kbps":
+        print("Operation rate is not in Kbps")
+        return
+
+    max_credits = rates_to_credits(int(max_rate), unit)
+
+    client = Client(sio, storage, max_credits)
+
+    connect_to_server(client)
+
+    timesync.listen()
 
 
 if __name__ == "__main__":

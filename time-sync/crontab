@@ -1,0 +1,2 @@
+0 __SYNC_TIME__ * * * /usr/bin/python3 /src/timesync/trigger.py >> /var/log/cron.log 2>&1
+# This extra line makes it a valid cron

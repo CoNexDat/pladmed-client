@@ -2,61 +2,74 @@
 
 import urllib.request
 import urllib.parse
-import json
 import subprocess
 from utils.params_parser import ParamsParser
+from common.transmit_manager import TransmitManager
+from common.operations_manager import OperationsManager
+from common.operation import Operation
+from common.communicator import Communicator
+import time
 
 
 class Client:
-    def __init__(self):
+    def __init__(self, sio, storage, max_credits):
+        self.sio = sio
         self.parser = ParamsParser()
+        self.storage = storage
+
+        self.communicator = Communicator()
+
+        self.operations_manager = OperationsManager(storage, self.communicator)
+
+        self.transmit_manager = TransmitManager(
+            self.sio,
+            storage,
+            self.communicator
+        )
+
+        print("Client with availability for up to: ", max_credits, " creditos")
+
+        self.max_credits = max_credits
+
+        self.operations_manager.start()
 
     def connect(self):
         print("Client connected")
-
-        '''try:
-            response = urllib.request.urlopen('http://0.0.0.0:5000/')
-            print(json.loads(response.read()))
-        except:
-            print("Can't reach server")
-
-        subprocess.run(["dig", "www.google.com"])'''
-        #result = subprocess.run(["scamper", "-c", "trace -P UDP-paris", "-i", "179.60.195.36"])
-
-    def traceroute(self, params):
-        # Params must be a dict with params
-        sub_cmd = self.parser.parse_traceroute(params)
-
-        result = self.execute_scamper(sub_cmd)
-
-        print(f"Operation finished with result {result}")
-
-    def ping(self, params):
-        # Params must be a dict with params
-        sub_cmd = self.parser.parse_ping(params)
-        result = self.execute_scamper(sub_cmd)
-
-        print(f"Operation finished with result {result}")
-
-    def execute_scamper(self, sub_cmd):
-        print("Executing scamper -c with params: ", sub_cmd)
-
-        return subprocess.run(
-            ["scamper", "-c"] + sub_cmd
-        )
-
-        print(f"Operation finished with result {result}")
-
-    def dns(self, params):
-        sub_cmd = self.parser.parse_dns(params)
-
-        print("Executing dig with params: ", sub_cmd)
-
-        result = subprocess.run(
-            ["dig"] + sub_cmd
-        )
-
-        print(f"Operation finished with result {result}")
+        self.transmit_manager.start()
 
     def disconnect(self):
         print("Client disconnected")
+
+        self.transmit_manager.stop()
+
+    def traceroute(self, op_id, params, credits_):
+        # Params must be a dict with params
+        actual_credits = self.communicator.get_current_credits()
+
+        print("Credits in use: ", actual_credits, "/", self.max_credits)
+
+        if actual_credits + credits_ > self.max_credits:
+            print("No available credits for this operation")
+            return
+
+        sub_cmd = self.parser.parse_traceroute(params)
+
+        operation = Operation(op_id, sub_cmd, credits_)
+
+        self.operations_manager.add_operation(operation)
+
+    def ping(self, op_id, params, credits_):
+        # Params must be a dict with params
+        actual_credits = self.communicator.get_current_credits()
+
+        print("Credits in use: ", actual_credits, "/", self.max_credits)
+
+        if actual_credits + credits_ > self.max_credits:
+            print("No available credits for this operation")
+            return
+
+        sub_cmd = self.parser.parse_ping(params)
+
+        operation = Operation(op_id, sub_cmd, credits_)
+
+        self.operations_manager.add_operation(operation)
