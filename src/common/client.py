@@ -54,6 +54,8 @@ class Client:
 
         sub_cmd = self.parser.parse_traceroute(params)
 
+        # TODO: Perform DNS resolution here, if necessary
+
         operation = Operation(op_id, sub_cmd, credits_)
 
         self.operations_manager.add_operation(operation)
@@ -69,6 +71,24 @@ class Client:
             return
 
         sub_cmd = self.parser.parse_ping(params)
+
+        # TODO: Perform DNS resolution here, if necessary
+
+        operation = Operation(op_id, sub_cmd, credits_)
+
+        self.operations_manager.add_operation(operation)
+
+    def dns(self, op_id, params, credits_):
+        # Params must be a dict with params
+        actual_credits = self.communicator.get_current_credits()
+
+        print("Credits in use: ", actual_credits, "/", self.max_credits)
+
+        if actual_credits + credits_ > self.max_credits:
+            print("No available credits for this operation")
+            return
+
+        sub_cmd = self.parser.parse_dns(params)
 
         operation = Operation(op_id, sub_cmd, credits_)
 

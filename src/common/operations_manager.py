@@ -13,6 +13,7 @@ from common.communicator import (
 )
 import uuid
 
+
 class OperationsManager():
     def __init__(self, storage, communicator):
         self.storage = storage
@@ -29,7 +30,7 @@ class OperationsManager():
 
         for operation in self.current_ops.values():
             total_credits += operation.credits
-        
+
         return total_credits
 
     def recover_state(self):
@@ -44,14 +45,14 @@ class OperationsManager():
             finished_tasks = operation.finished_tasks()
 
             for task in finished_tasks:
-                self.communicator.notify_end_task(operation, task)   
+                self.communicator.notify_end_task(operation, task)
 
     def start(self):
         self.current_ops = self.storage.read_operations_state()
-        
+
         self.p = Process(target=self.run)
         self.p.start()
-        
+
     def stop(self):
         self.communicator.stop_operations()
         self.p.join()
@@ -94,7 +95,8 @@ class OperationsManager():
 
                     self.storage.mark_task_finished(task)
                     self.current_ops[op_id].add_task(task)
-                    self.communicator.notify_end_task(self.current_ops[op_id], task)
+                    self.communicator.notify_end_task(
+                        self.current_ops[op_id], task)
 
                 elif status == FINISHED:
                     print("Operation finished")
@@ -115,7 +117,7 @@ class OperationsManager():
                     self.check_operation_finished(self.current_ops[op_id])
 
                 self.save_current_status()
-                
+
                 print("Current ops after: ", self.current_ops)
 
             data = self.communicator.read_operations()
@@ -136,11 +138,16 @@ class OperationsManager():
         # TODO: Schedule in Cron...
         # Temporary execute scamper here
         print("Scheduling: ", operation)
-        p = Process(target=self.execute_scamper, args=(operation, ))
+        target = None
+        if operation.params != None and len(operation.params) > 0 and operation.params[0] == "dig":
+            target = self.execute_dig
+        else:
+            target = self.execute_scamper
+        p = Process(target=target, args=(operation, ))
         p.start()
         self.processes.append(p)
 
-    def execute_scamper(self, operation):        
+    def execute_scamper(self, operation):
         for i in range(0, 5):
             task = Task(str(uuid.uuid4()))
 
@@ -157,4 +164,20 @@ class OperationsManager():
 
             self.communicator.finish_task(operation, task)
 
+        # TODO Add timestamp (do this in Task)
+        self.communicator.finish_operation(operation)
+
+    def execute_dig(self, operation):
+        for i in range(0, 5):
+            task = Task(str(uuid.uuid4()))
+
+            subprocess.run(
+                [
+                    "dig"
+                ] + operation.params
+            )
+
+            self.communicator.finish_task(operation, task)
+
+        # TODO Add timestamp (do this in Task)
         self.communicator.finish_operation(operation)

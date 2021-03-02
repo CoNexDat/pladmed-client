@@ -29,4 +29,6 @@ class ParamsParser:
         return sub_cmd + general_cmd
 
     def parse_dns(self, params):
-        return [self.parse_params(params, DNS_PARAMS)]
+        general_cmd = self.parse_params(params, GENERAL_PARAMS).split(' ')
+        sub_cmd = ["dig " + self.parse_params(params, DNS_PARAMS)]
+        return sub_cmd + general_cmd

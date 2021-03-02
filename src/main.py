@@ -40,6 +40,10 @@ def config_connection(client):
     def on_ping(data):
         client.ping(data["_id"], data["params"], 10)  # data["credits"])
 
+    @client.sio.on('dns')
+    def on_dns(data):
+        client.dns(data["_id"], data["params"], 10)  # data["credits"])
+
 
 def connect_to_server(client):
     backend_url = 'ws://' + \
