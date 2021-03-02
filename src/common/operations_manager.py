@@ -1,7 +1,8 @@
-from multiprocessing import Process, SimpleQueue
+import json
+from multiprocessing import Process
 from common.operation import Operation
 from common.task import Task
-import subprocess
+from crontab import CronTab
 from common.communicator import (
     STOP,
     NEW_DATA,
@@ -11,16 +12,14 @@ from common.communicator import (
     TASK_SENT,
     CREDITS
 )
-import uuid
+from utils.time_utils import is_over, generate_stoptime
+from scripts.scamper import main
 
 class OperationsManager():
     def __init__(self, storage, communicator):
         self.storage = storage
         self.communicator = communicator
         self.current_ops = self.storage.read_operations_state()
-
-        #TODO: Remove
-        self.processes = []
 
         self.recover_state()
 
@@ -33,6 +32,7 @@ class OperationsManager():
         return total_credits
 
     def recover_state(self):
+        print("From recovering: ", self.current_ops.values())
         for operation in self.current_ops.values():
             if operation.status == IN_PROCESS:
                 self.schedule_operation(operation)
@@ -44,7 +44,7 @@ class OperationsManager():
             finished_tasks = operation.finished_tasks()
 
             for task in finished_tasks:
-                self.communicator.notify_end_task(operation, task)   
+                self.communicator.notify_end_task(operation, task)
 
     def start(self):
         self.current_ops = self.storage.read_operations_state()
@@ -55,9 +55,6 @@ class OperationsManager():
     def stop(self):
         self.communicator.stop_operations()
         self.p.join()
-
-        for p in self.processes:
-            p.join()
 
         print("Operation manager stopped")
 
@@ -80,11 +77,14 @@ class OperationsManager():
                     operation = Operation(
                         operation_data["id"],
                         operation_data["params"],
-                        operation_data["credits"]
+                        operation_data["credits"],
+                        operation_data["cron"],
+                        operation_data["times_per_minute"],
+                        operation_data["stop_time"]
                     )
 
-                    self.schedule_operation(operation)
                     self.current_ops[op_id] = operation
+                    self.schedule_operation(operation)
 
                 elif status == TASK_FINISHED:
                     print("New task finished income")
@@ -92,9 +92,16 @@ class OperationsManager():
 
                     task = Task(task_data["code"])
 
-                    self.storage.mark_task_finished(task)
-                    self.current_ops[op_id].add_task(task)
-                    self.communicator.notify_end_task(self.current_ops[op_id], task)
+                    try:
+                        self.current_ops[op_id].add_task(task)
+                        self.storage.mark_task_finished(task)
+                        self.communicator.notify_end_task(self.current_ops[op_id], task)
+                    except:
+                        # Operation has been stopped
+                        # Clean tmp file
+                        print("Removing pending task of finished operation")
+                        self.storage.remove_tmp_file(task)
+                        pass
 
                 elif status == FINISHED:
                     print("Operation finished")
@@ -133,28 +140,46 @@ class OperationsManager():
         self.storage.save_operations_state(self.current_ops)
 
     def schedule_operation(self, operation):
-        # TODO: Schedule in Cron...
-        # Temporary execute scamper here
-        print("Scheduling: ", operation)
-        p = Process(target=self.execute_scamper, args=(operation, ))
-        p.start()
-        self.processes.append(p)
+        cron_stoptime = generate_stoptime(operation)
 
-    def execute_scamper(self, operation):        
-        for i in range(0, 5):
-            task = Task(str(uuid.uuid4()))
+        print("Params are: ", operation.params)
 
-            subprocess.run(
-                [
-                    "scamper",
-                    "-O",
-                    "warts",
-                    "-o",
-                    self.storage.operation_filename_tmp(task),
-                    "-c"
-                ] + operation.params
-            )
+        #sub_cmd_str = "|".join([f"'{param}'" for param in operation.params])
+        sub_cmd_str = "|".join([f"{param}" for param in operation.params])
 
-            self.communicator.finish_task(operation, task)
+        operation_str = json.dumps(operation.data())
 
-        self.communicator.finish_operation(operation)
+        cron_command = f"python3 /src/scripts/scamper.py {operation.times_per_minute} '{sub_cmd_str}' '{operation_str}'"
+
+        print("Cron command: ", cron_command)
+
+        #p = Process(target=main)
+        #p.start()
+        # Saves execution cron
+        with CronTab(user=True) as cron:
+            job = cron.new(command=cron_command, comment=operation.id)
+            #job.minute.every(1)
+            job.setall(operation.cron)
+
+            print("Valid job: ", job.is_valid())
+
+        # Saves stopping cron
+        with CronTab(user=True) as cron:
+            stop_command = f"python3 /src/scripts/stopper.py {operation.id} '{operation_str}'"
+            job = cron.new(command=stop_command, comment=operation.id)
+            job.setall(cron_stoptime)
+
+        if is_over(operation):
+            print("Operation has to stop due to finish date")
+            self.remove_cron_task(operation)
+            self.communicator.finish_operation(operation)
+            return
+
+        print("Jobs all set")
+
+    def remove_cron_task(self, operation):
+        with CronTab(user=True) as cron:
+            job_iter = cron.find_comment(operation.id)
+
+            for job in job_iter:
+                cron.remove(job)

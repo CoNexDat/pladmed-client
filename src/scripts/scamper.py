@@ -1,0 +1,65 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join('../..', 'src')))
+
+import subprocess
+import sys
+import time
+import uuid
+import json
+from multiprocessing.connection import Client
+from common.task import Task
+from os import path, getenv
+import config.connection as config
+
+address = ('localhost', int(getenv('FINISH_TASK_PORT')))
+
+#TMP_FOLDER = "../safe_storage/tmp/"
+
+def operation_filename(task):
+    file_storage = config.TMP_FOLDER + task.code
+
+    return file_storage 
+
+def end_task(operation_str, task, client):
+    finished_task_data = {
+        "operation": json.loads(operation_str),
+        "task": task.data()
+    }
+
+    client.send(json.dumps(finished_task_data))
+
+def main():
+    client = Client(address)
+
+    times_per_minute = int(sys.argv[1])
+
+    sub_cmd_joined = sys.argv[2]
+    
+    sub_cmd = sub_cmd_joined.split("|")
+
+    operation_str = sys.argv[3]
+
+    for i in range(times_per_minute):
+        start = time.time()
+        task = Task(str(uuid.uuid4()))
+
+        subprocess.run(
+            [
+                "scamper",
+                "-O",
+                "warts",
+                "-o",
+                operation_filename(task),
+                "-c"
+            ] + sub_cmd
+        )
+
+        time.sleep(max(60/times_per_minute - int(time.time() - start), 0))
+        end_task(operation_str, task, client)
+
+    client.close()
+
+if __name__ == "__main__":
+    main()
