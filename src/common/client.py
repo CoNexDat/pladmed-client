@@ -56,6 +56,7 @@ class Client:
         # Params must be a dict with params
         actual_credits = self.communicator.get_current_credits()
 
+        print("Credit cost: ", credits_)
         print("Credits in use: ", actual_credits, "/", self.max_credits)
 
         if actual_credits + credits_ > self.max_credits:
@@ -81,6 +82,7 @@ class Client:
         # Params must be a dict with params
         actual_credits = self.communicator.get_current_credits()
 
+        print("Credit cost: ", credits_)
         print("Credits in use: ", actual_credits, "/", self.max_credits)
 
         if actual_credits + credits_ > self.max_credits:

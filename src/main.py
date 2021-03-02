@@ -34,11 +34,11 @@ def config_connection(client):
     @client.sio.on('traceroute')
     def on_traceroute(data):
         print("Traceroute received")
-        client.traceroute(data["_id"], data["params"], 10)#data["credits"])
+        client.traceroute(data["_id"], data["params"], data["credits"])
 
     @client.sio.on('ping')
     def on_ping(data):
-        client.ping(data["_id"], data["params"], 10)#data["credits"])
+        client.ping(data["_id"], data["params"], data["credits"])
         
 def connect_to_server(client):
     token = os.getenv('TOKEN', 'token')

@@ -12,7 +12,7 @@ from common.communicator import (
     TASK_SENT,
     CREDITS
 )
-from utils.time_utils import is_over
+from utils.time_utils import is_over, generate_stoptime
 from scripts.scamper import main
 
 class OperationsManager():
@@ -83,8 +83,8 @@ class OperationsManager():
                         operation_data["stop_time"]
                     )
 
-                    self.schedule_operation(operation)
                     self.current_ops[op_id] = operation
+                    self.schedule_operation(operation)
 
                 elif status == TASK_FINISHED:
                     print("New task finished income")
@@ -140,9 +140,7 @@ class OperationsManager():
         self.storage.save_operations_state(self.current_ops)
 
     def schedule_operation(self, operation):
-        #if is_over(operation.stop_time):
-        #    self.communicator.finish_operation(operation)
-        #    return
+        cron_stoptime = generate_stoptime(operation)
 
         print("Params are: ", operation.params)
 
@@ -169,6 +167,19 @@ class OperationsManager():
         with CronTab(user=True) as cron:
             stop_command = f"python3 /src/scripts/stopper.py {operation.id} '{operation_str}'"
             job = cron.new(command=stop_command, comment=operation.id)
-            job.setall(operation.stop_time)
+            job.setall(cron_stoptime)
+
+        if is_over(operation):
+            print("Operation has to stop due to finish date")
+            self.remove_cron_task(operation)
+            self.communicator.finish_operation(operation)
+            return
 
         print("Jobs all set")
+
+    def remove_cron_task(self, operation):
+        with CronTab(user=True) as cron:
+            job_iter = cron.find_comment(operation.id)
+
+            for job in job_iter:
+                cron.remove(job)
