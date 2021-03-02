@@ -58,9 +58,13 @@ def connect_to_server(client):
         except:
             time.sleep(config.DELAY_BETWEEN_RETRY)
 
+import datetime
+
 def main():
     sio = socketio.Client(engineio_logger=True,
                           reconnection=True, reconnection_attempts=0)
+
+    print("Now is: ", datetime.datetime.now())
 
     #subprocess.run("crond")
 

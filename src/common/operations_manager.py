@@ -92,9 +92,16 @@ class OperationsManager():
 
                     task = Task(task_data["code"])
 
-                    self.storage.mark_task_finished(task)
-                    self.current_ops[op_id].add_task(task)
-                    self.communicator.notify_end_task(self.current_ops[op_id], task)
+                    try:
+                        self.current_ops[op_id].add_task(task)
+                        self.storage.mark_task_finished(task)
+                        self.communicator.notify_end_task(self.current_ops[op_id], task)
+                    except:
+                        # Operation has been stopped
+                        # Clean tmp file
+                        print("Removing pending task of finished operation")
+                        self.storage.remove_tmp_file(task)
+                        pass
 
                 elif status == FINISHED:
                     print("Operation finished")
@@ -144,7 +151,7 @@ class OperationsManager():
 
         operation_str = json.dumps(operation.data())
 
-        cron_command = f"python3 /src/scripts/scamper.py {operation.times_per_minute} '{sub_cmd_str}' '{operation_str}' >> /src/output.txt"
+        cron_command = f"python3 /src/scripts/scamper.py {operation.times_per_minute} '{sub_cmd_str}' '{operation_str}'"
 
         print("Cron command: ", cron_command)
 
