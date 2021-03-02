@@ -1,12 +1,15 @@
 from common.communicator import TASK_SENT, TASK_FINISHED, IN_PROCESS
 
 class Operation:
-    def __init__(self, id_, params, credits_):
+    def __init__(self, id_, params, credits_, cron, times_per_minute, stop_time):
         self.id = id_
         self.params = params
         self.credits = credits_
         self.tasks = []
         self.status = IN_PROCESS
+        self.cron = cron
+        self.times_per_minute = times_per_minute
+        self.stop_time = stop_time
     
     def add_task(self, task):
         self.tasks.append(task)
@@ -33,7 +36,11 @@ class Operation:
         return finished_tasks
 
     def data(self):
-        return self.__dict__
+        data_ = self.__dict__.copy()
+
+        del data_["tasks"]
+
+        return data_
 
     def __hash__(self):
         return hash(self.id)
@@ -42,7 +49,7 @@ class Operation:
         return self.id == other.id
 
     def __repr__(self):
-        return "Operation: " + str(self.data())
+        return "Operation: " + str(self.__dict__)
 
     def __str__(self):
-        return "Operation: " + str(self.data())
+        return "Operation: " + str(self.__dict__)

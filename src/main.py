@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import datetime
 from common.client import Client
 from common.storage import Storage
 import config.connection as config
@@ -8,6 +9,7 @@ import socketio
 import time
 import os
 import re
+import subprocess
 from multiprocessing import Process
 from common.operations_manager import OperationsManager
 from utils.credits import rates_to_credits
@@ -69,6 +71,10 @@ def connect_to_server(client):
 def main():
     sio = socketio.Client(engineio_logger=True,
                           reconnection=True, reconnection_attempts=0)
+
+    print("Now is: ", datetime.datetime.now())
+
+    # subprocess.run("crond")
 
     storage = Storage(
         config.RESULT_FOLDER,

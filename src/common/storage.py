@@ -14,6 +14,13 @@ class Storage:
     def clean_tmp_folder(self):
         for file_ in listdir(self.tmp_folder):
             remove(self.tmp_folder + file_)
+    
+    def remove_tmp_file(self, task):
+        try:
+            remove(self.tmp_folder + task.code)
+        except:
+            # File doesn't exist
+            pass
 
     def operation_filename(self, task):
         file_storage = self.store_in + task.code
