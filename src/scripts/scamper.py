@@ -23,8 +23,6 @@ def operation_filename(task):
     return file_storage 
 
 def end_task(operation_str, task, client):
-    print(f'Sending to FinishTaskCommunicator operation {operation_str}')
-
     finished_task_data = {
         "operation": json.loads(operation_str),
         "task": task.data()
@@ -33,26 +31,15 @@ def end_task(operation_str, task, client):
     client.send(json.dumps(finished_task_data))
 
 def main():
-    print(sys.argv)
-    print("Scamper main called")
-
     client = Client(address)
 
     times_per_minute = int(sys.argv[1])
 
-    print(f"times_per_minute: {times_per_minute}")
-
     sub_cmd_joined = sys.argv[2]
     
-    print(f"sub_cmd_joined: {sub_cmd_joined}")
-
     sub_cmd = sub_cmd_joined.split("|")
 
-    print("Sub cmd splitted: ", sub_cmd)
-
     operation_str = sys.argv[3]
-
-    print(f"operation_str: {operation_str}")
 
     for i in range(times_per_minute):
         start = time.time()
@@ -75,5 +62,4 @@ def main():
     client.close()
 
 if __name__ == "__main__":
-    print("Scamper called")
     main()
