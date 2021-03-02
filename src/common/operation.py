@@ -6,9 +6,9 @@ class Operation:
         self.params = params
         self.credits = credits_
         self.tasks = []
-        self.status = IN_PROCESS,
-        self.cron = cron,
-        self.times_per_minute = times_per_minute,
+        self.status = IN_PROCESS
+        self.cron = cron
+        self.times_per_minute = times_per_minute
         self.stop_time = stop_time
     
     def add_task(self, task):
@@ -36,7 +36,11 @@ class Operation:
         return finished_tasks
 
     def data(self):
-        return self.__dict__
+        data_ = self.__dict__.copy()
+
+        del data_["tasks"]
+
+        return data_
 
     def __hash__(self):
         return hash(self.id)
@@ -45,7 +49,7 @@ class Operation:
         return self.id == other.id
 
     def __repr__(self):
-        return "Operation: " + str(self.data())
+        return "Operation: " + str(self.__dict__)
 
     def __str__(self):
-        return "Operation: " + str(self.data())
+        return "Operation: " + str(self.__dict__)

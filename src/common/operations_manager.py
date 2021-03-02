@@ -13,6 +13,7 @@ from common.communicator import (
     CREDITS
 )
 from utils.time_utils import is_over
+from scripts.scamper import main
 
 class OperationsManager():
     def __init__(self, storage, communicator):
@@ -31,6 +32,7 @@ class OperationsManager():
         return total_credits
 
     def recover_state(self):
+        print("From recovering: ", self.current_ops.values())
         for operation in self.current_ops.values():
             if operation.status == IN_PROCESS:
                 self.schedule_operation(operation)
@@ -131,18 +133,35 @@ class OperationsManager():
         self.storage.save_operations_state(self.current_ops)
 
     def schedule_operation(self, operation):
-        if is_over(operation.stop_time):
-            self.communicator.finish_operation(operation)
-            return
-        sub_cmd_str = " ".join([f"'{param}'" for param in operation.params])
+        #if is_over(operation.stop_time):
+        #    self.communicator.finish_operation(operation)
+        #    return
+
+        print("Params are: ", operation.params)
+
+        #sub_cmd_str = "|".join([f"'{param}'" for param in operation.params])
+        sub_cmd_str = "|".join([f"{param}" for param in operation.params])
+
         operation_str = json.dumps(operation.data())
-        cron_command = f"python3 /src/scripts/scamper.py {operation.times_per_minute} '{sub_cmd_str}' '{operation_str}'"
+
+        cron_command = f"python3 /src/scripts/scamper.py {operation.times_per_minute} '{sub_cmd_str}' '{operation_str}' >> /src/output.txt"
+
+        print("Cron command: ", cron_command)
+
+        #p = Process(target=main)
+        #p.start()
         # Saves execution cron
         with CronTab(user=True) as cron:
             job = cron.new(command=cron_command, comment=operation.id)
+            #job.minute.every(1)
             job.setall(operation.cron)
+
+            print("Valid job: ", job.is_valid())
+
         # Saves stopping cron
         with CronTab(user=True) as cron:
             stop_command = f"python3 /src/scripts/stopper.py {operation.id} '{operation_str}'"
             job = cron.new(command=stop_command, comment=operation.id)
             job.setall(operation.stop_time)
+
+        print("Jobs all set")

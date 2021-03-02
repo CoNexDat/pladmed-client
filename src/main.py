@@ -13,7 +13,6 @@ from multiprocessing import Process
 from common.operations_manager import OperationsManager
 from utils.credits import rates_to_credits
 
-
 def config_connection(client):
     processes = []
 
@@ -63,7 +62,7 @@ def main():
     sio = socketio.Client(engineio_logger=True,
                           reconnection=True, reconnection_attempts=0)
 
-    subprocess.run("crond")
+    #subprocess.run("crond")
 
     storage = Storage(
         config.RESULT_FOLDER,
