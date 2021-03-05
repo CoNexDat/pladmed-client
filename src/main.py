@@ -49,10 +49,7 @@ def connect_to_server(client):
 
     while not connected:
         try:
-            client.sio.connect(
-                url=config.HOST + "?token=" + token,
-                transports='websocket'
-            )
+            client.start_connection(config.HOST + "?token=" + token)
 
             connected = True
         except:

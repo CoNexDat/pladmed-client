@@ -39,6 +39,18 @@ class Client:
         self.finish_task_communicator.start()
         self.finish_operation_communicator.start()
 
+    def start_connection(self, host):
+        actual_credits = self.communicator.get_current_credits()
+
+        self.sio.connect(
+            url=host,
+            transports='websocket',
+            headers={
+                "total_credits": str(self.max_credits),
+                "in_use_credits": str(actual_credits)
+            }
+        )
+
     def connect(self):
         print("Client connected")
         self.transmit_manager.start()
