@@ -74,7 +74,7 @@ class OperationsManager():
                 op_id = operation_data["id"]
 
                 if status == IN_PROCESS:
-                    print("New operation income")
+                    print("New operation event received")
                     operation = Operation(
                         operation_data["id"],
                         operation_data["params"],
@@ -89,7 +89,7 @@ class OperationsManager():
                     self.schedule_operation(operation)
 
                 elif status == TASK_FINISHED:
-                    print("New task finished income")
+                    print("New task finished event received")
                     task_data = data[3]
 
                     task = Task(task_data["code"])
@@ -113,7 +113,7 @@ class OperationsManager():
                     self.check_operation_finished(self.current_ops[op_id])
 
                 elif status == TASK_SENT:
-                    print("Task sent income")
+                    print("Task sent event received")
                     task_data = data[3]
 
                     task = Task(task_data["code"])

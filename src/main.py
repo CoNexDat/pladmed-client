@@ -74,8 +74,6 @@ def main():
 
     print("Now is: ", datetime.datetime.now())
 
-    # subprocess.run("crond")
-
     storage = Storage(
         config.RESULT_FOLDER,
         config.STATE_FILE,
@@ -88,7 +86,7 @@ def main():
 
     [max_rate, unit] = re.findall(r'[A-Za-z]+|\d+', operation_rate)
 
-    # Temporary accept only Kbps
+    # Temporarily accept only Kbps
     if unit != "Kbps":
         print("Operation rate is not in Kbps")
         return
