@@ -13,7 +13,7 @@ from common.communicator import (
     CREDITS
 )
 from utils.time_utils import is_over, generate_stoptime
-from scripts.scamper import main
+from scripts.measure import main
 
 
 class OperationsManager():
@@ -81,7 +81,8 @@ class OperationsManager():
                         operation_data["credits"],
                         operation_data["cron"],
                         operation_data["times_per_minute"],
-                        operation_data["stop_time"]
+                        operation_data["stop_time"],
+                        operation_data["binary"]
                     )
 
                     self.current_ops[op_id] = operation
@@ -151,7 +152,7 @@ class OperationsManager():
 
         operation_str = json.dumps(operation.data())
 
-        cron_command = f"python3 /src/scripts/scamper.py {operation.times_per_minute} '{sub_cmd_str}' '{operation_str}'"
+        cron_command = f"python3 /src/scripts/measure.py {operation.times_per_minute} '{sub_cmd_str}' '{operation_str}' '{operation.binary}'"
 
         print("Cron command: ", cron_command)
 

@@ -13,7 +13,7 @@ import os
 CLOSE_MESSAGE = "close"
 SYNC_MESSAGE = "sync"
 SYNC_PASSWORD = b'sync password'
-SYNC_PORT = 6000
+SYNC_PORT = 6002
 
 
 def listen():

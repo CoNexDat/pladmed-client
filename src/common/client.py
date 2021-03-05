@@ -8,7 +8,11 @@ from common.transmit_manager import TransmitManager
 from common.operations_manager import OperationsManager
 from common.finish_task_communicator import FinishTaskCommunicator
 from common.finish_operation_communicator import FinishOperationCommunicator
-from common.operation import Operation
+from common.operation import (
+    Operation,
+    DIG_BINARY,
+    SCAMPER_BINARY
+)
 from common.communicator import Communicator
 import time
 
@@ -76,7 +80,8 @@ class Client:
             credits_,
             params["cron"],
             params["times_per_minute"],
-            params["stop_time"]
+            params["stop_time"],
+            SCAMPER_BINARY
         )
 
         self.operations_manager.add_operation(operation)
@@ -102,7 +107,8 @@ class Client:
             credits_,
             params["cron"],
             params["times_per_minute"],
-            params["stop_time"]
+            params["stop_time"],
+            SCAMPER_BINARY
         )
 
         self.operations_manager.add_operation(operation)
@@ -125,7 +131,8 @@ class Client:
             credits_,
             params["cron"],
             params["times_per_minute"],
-            params["stop_time"]
+            params["stop_time"],
+            DIG_BINARY
         )
 
         self.operations_manager.add_operation(operation)
