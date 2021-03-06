@@ -152,6 +152,7 @@ class OperationsManager():
 
         operation_str = json.dumps(operation.data())
 
+        # cron_command = f"python3 /src/scripts/measure.py {operation.times_per_minute} '{sub_cmd_str}' '{operation_str}' '{operation.binary}' >> /src/output.log 2>&1"
         cron_command = f"python3 /src/scripts/measure.py {operation.times_per_minute} '{sub_cmd_str}' '{operation_str}' '{operation.binary}'"
 
         print("Cron command: ", cron_command)

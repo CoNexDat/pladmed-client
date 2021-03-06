@@ -1,17 +1,17 @@
-import config.connection as config
-from os import path, getenv
-from common.task import Task
-from common.operation import SCAMPER_BINARY, DIG_BINARY
-from multiprocessing.connection import Client
-import json
-import uuid
-import time
-import subprocess
-import sys
 import os
+import sys
+import subprocess
+import time
+import uuid
+import json
 
 sys.path.append(os.path.abspath(os.path.join('../..', 'src')))
 
+from multiprocessing.connection import Client
+from common.operation import SCAMPER_BINARY, DIG_BINARY
+from common.task import Task
+from os import path, getenv
+import config.connection as config
 
 address = ('localhost', int(getenv('FINISH_TASK_PORT')))
 
@@ -53,7 +53,7 @@ def main():
 
         run_measurement(task, sub_cmd)
 
-        time.sleep(max(60/times_per_minute - int(time.time() - start), 0))
+        time.sleep(max(60 / times_per_minute - int(time.time() - start), 0))
         end_task(operation_str, task, client)
 
     client.close()
