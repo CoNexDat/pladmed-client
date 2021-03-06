@@ -58,11 +58,7 @@ def connect_to_server(client):
 
     while not connected:
         try:
-            client.sio.connect(
-                url=backend_url + "?token=" + token,
-                transports='websocket'
-            )
-
+            client.start_connection(backend_url + "?token=" + token)
             connected = True
         except:
             time.sleep(config.DELAY_BETWEEN_RETRY)
