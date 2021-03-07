@@ -1,7 +1,7 @@
 from multiprocessing import Process, SimpleQueue
 from config.connection import RESULT_FOLDER
 import subprocess
-from common.operation import Operation
+from common.operation import Operation, SCAMPER_BINARY
 import os
 from common.task import Task
 
@@ -65,7 +65,8 @@ class TransmitManager():
             data_to_send = {
                 "operation_id": operation.id,
                 "content": content,
-                "unique_code": task.code
+                "unique_code": task.code,
+                "format": "warts" if operation.binary == SCAMPER_BINARY else "gzip"
             }
 
             self.sio.emit(

@@ -81,7 +81,8 @@ def run_dig(task, sub_cmd):
             # ] + sub_cmd + [
             #     f" > {operation_filename(task)}"
             # ]
-            "dig",
+            "dig | gzip",
+            shell=True,
             stdout=outfile
         )
 
