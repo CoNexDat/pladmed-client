@@ -1,6 +1,8 @@
 __pycache__/
 .idea/
 config
+!config/
 results/
 safe_storage/
 tmp/
+src/.ash_history

@@ -1,23 +1,24 @@
 from multiprocessing import Process, SimpleQueue
 from config.connection import RESULT_FOLDER
 import subprocess
-from common.operation import Operation
+from common.operation import Operation, SCAMPER_BINARY
 import os
 from common.task import Task
 
 STOP = 0
 NEW_RESULTS = 1
 
+
 class TransmitManager():
     def __init__(self, sio, storage, communicator):
         self.sio = sio
         self.storage = storage
         self.communicator = communicator
-    
+
     def run(self):
         self.start()
 
-    def start(self):        
+    def start(self):
         data = self.communicator.read_transmit()
 
         while data[0] != STOP:
@@ -32,15 +33,18 @@ class TransmitManager():
                 operation_data["credits"],
                 operation_data["cron"],
                 operation_data["times_per_minute"],
-                operation_data["stop_time"]
+                operation_data["stop_time"],
+                operation_data["binary"]
             )
 
-            print("Got finished task: ", task.code, " for operation: ", operation.id)
+            print("Got finished task: ", task.code,
+                  " for operation: ", operation.id)
 
             def ack(operation_id):
                 # If operation was successfully saved in the server
                 if operation_id == operation.id:
-                    print("Successfully sent task: ", task.code, " for operation: ", operation.id)
+                    print("Successfully sent task: ", task.code,
+                          " for operation: ", operation.id)
                     self.communicator.sent_task(operation, task)
 
             # Send operation to server
@@ -61,7 +65,8 @@ class TransmitManager():
             data_to_send = {
                 "operation_id": operation.id,
                 "content": content,
-                "unique_code": task.code
+                "unique_code": task.code,
+                "format": "warts" if operation.binary == SCAMPER_BINARY else "gzip"
             }
 
             self.sio.emit(

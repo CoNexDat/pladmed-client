@@ -6,6 +6,7 @@ import json
 
 address = ('localhost', int(getenv('FINISH_OPERATION_PORT')))
 
+
 class FinishOperationCommunicator:
     def __init__(self, communicator):
         self.communicator = communicator
@@ -33,7 +34,7 @@ class FinishOperationCommunicator:
 
     def receive_data(self, conn):
         operation_data_str = conn.recv()
-            
+
         operation_data = json.loads(operation_data_str)
 
         operation = Operation(
@@ -42,13 +43,14 @@ class FinishOperationCommunicator:
             operation_data["credits"],
             operation_data["cron"],
             operation_data["times_per_minute"],
-            operation_data["stop_time"]
+            operation_data["stop_time"],
+            operation_data["binary"]
         )
 
         self.communicator.finish_operation(operation)
 
         conn.close()
-    
+
     def remove_finished(self):
         for p in self.processes:
             if not p.is_alive():

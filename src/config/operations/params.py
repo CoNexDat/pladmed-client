@@ -1,8 +1,10 @@
 from utils.command_validator import (
     AnyValidator,
     BetweenValidator,
-    MultiValueValidator
+    MultiValueValidator,
+    EmptyValidator
 )
+
 from utils.command_manager import (
     CommandManager,
     MultiCommandManager
@@ -29,6 +31,17 @@ PING_PARAMS = {
     "method": CommandManager("-P", MultiValueValidator(["icmp-echo", "icmp-time", "tcp-syn", "tcp-ack", "tcp-ack-sport", "udp", "udp-dport"])),
     "size": CommandManager("-s", BetweenValidator(1, 255)),
     "timeout": CommandManager("-W", BetweenValidator(0, 100))
+}
+
+DNS_PARAMS = {
+    "address": CommandManager("-b", AnyValidator()),
+    "dns": MultiCommandManager("-q", AnyValidator()),
+    "ipv4": CommandManager("-4", EmptyValidator()),
+    "ipv6": CommandManager("-6", EmptyValidator()),
+    "name": MultiCommandManager("-q", AnyValidator()),
+    "type": CommandManager("-P", MultiValueValidator([
+        "a", "any", "axfr", "hinfo", "mx", "ns", "soa", "txt"
+    ]))
 }
 
 GENERAL_PARAMS = {

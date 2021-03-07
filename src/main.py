@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import datetime
 from common.client import Client
 from common.storage import Storage
 import config.connection as config
@@ -13,13 +14,14 @@ from multiprocessing import Process
 from common.operations_manager import OperationsManager
 from utils.credits import rates_to_credits
 
+
 def config_connection(client):
     processes = []
 
     @client.sio.event
     def connect():
         client.connect()
-        
+
     @client.sio.event
     def connect_error(message):
         print("Conn error: ", message)
@@ -39,8 +41,15 @@ def config_connection(client):
     @client.sio.on('ping')
     def on_ping(data):
         client.ping(data["_id"], data["params"], data["credits"])
-        
+
+    @client.sio.on('dns')
+    def on_dns(data):
+        client.dns(data["_id"], data["params"], data["credits"])
+
+
 def connect_to_server(client):
+    backend_url = 'ws://' + \
+        os.getenv('BACKEND_IP') + ":" + os.getenv('BACKEND_PORT')
     token = os.getenv('TOKEN', 'token')
 
     connected = False
@@ -49,13 +58,11 @@ def connect_to_server(client):
 
     while not connected:
         try:
-            client.start_connection(config.HOST + "?token=" + token)
-
+            client.start_connection(backend_url + "?token=" + token)
             connected = True
         except:
             time.sleep(config.DELAY_BETWEEN_RETRY)
 
-import datetime
 
 def main():
     sio = socketio.Client(engineio_logger=True,
@@ -63,21 +70,19 @@ def main():
 
     print("Now is: ", datetime.datetime.now())
 
-    #subprocess.run("crond")
-
     storage = Storage(
         config.RESULT_FOLDER,
         config.STATE_FILE,
         config.TMP_FOLDER
     )
-    
+
     storage.clean_tmp_folder()
-    
+
     operation_rate = os.getenv("OPERATIONS_RATE")
 
     [max_rate, unit] = re.findall(r'[A-Za-z]+|\d+', operation_rate)
 
-    # Temporary accept only Kbps
+    # Temporarily accept only Kbps
     if unit != "Kbps":
         print("Operation rate is not in Kbps")
         return
@@ -89,6 +94,7 @@ def main():
     connect_to_server(client)
 
     timesync.listen()
+
 
 if __name__ == "__main__":
     main()
