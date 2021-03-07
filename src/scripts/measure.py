@@ -73,13 +73,17 @@ def run_scamper(task, sub_cmd):
 
 
 def run_dig(task, sub_cmd):
-    subprocess.run(
-        [
+    # TODO Fix parameters reading
+    with open(operation_filename(task), "w") as outfile:
+        subprocess.run(
+            # [
+            #     "dig",
+            # ] + sub_cmd + [
+            #     f" > {operation_filename(task)}"
+            # ]
             "dig",
-        ] + sub_cmd + [
-            f" > {operation_filename(task)}"
-        ]
-    )
+            stdout=outfile
+        )
 
 
 if __name__ == "__main__":
