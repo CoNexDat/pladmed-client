@@ -73,15 +73,10 @@ def run_scamper(task, sub_cmd):
 
 
 def run_dig(task, sub_cmd):
-    # TODO Fix parameters reading
+    dig_cmd = 'dig ' + ' '.join(sub_cmd)
     with open(operation_filename(task), "w") as outfile:
         subprocess.run(
-            # [
-            #     "dig",
-            # ] + sub_cmd + [
-            #     f" > {operation_filename(task)}"
-            # ]
-            "dig | gzip",
+            f"{dig_cmd} | gzip",
             shell=True,
             stdout=outfile
         )
