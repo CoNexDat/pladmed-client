@@ -4,3 +4,4 @@ config
 results/
 safe_storage/
 tmp/
+src/.ash_history
