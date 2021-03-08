@@ -7,6 +7,7 @@ import json
 
 address = ('localhost', int(getenv('FINISH_TASK_PORT')))
 
+
 class FinishTaskCommunicator:
     def __init__(self, communicator):
         self.communicator = communicator
@@ -24,7 +25,7 @@ class FinishTaskCommunicator:
     def run(self):
         while True:
             self.remove_finished()
-            
+
             conn = self.listener.accept()
 
             p = Process(target=self.receive_data, args=(conn, ))
@@ -43,7 +44,8 @@ class FinishTaskCommunicator:
             finished_task_data["operation"]["credits"],
             finished_task_data["operation"]["cron"],
             finished_task_data["operation"]["times_per_minute"],
-            finished_task_data["operation"]["stop_time"]
+            finished_task_data["operation"]["stop_time"],
+            finished_task_data["operation"]["binary"]
         )
 
         task = Task(
@@ -53,9 +55,9 @@ class FinishTaskCommunicator:
         self.communicator.finish_task(operation, task)
 
         conn.close()
-    
+
     def remove_finished(self):
         for p in self.processes:
             if not p.is_alive():
                 print("Process finished")
-                self.processes.remove(p)    
+                self.processes.remove(p)

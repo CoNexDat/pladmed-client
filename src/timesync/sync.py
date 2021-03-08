@@ -13,14 +13,14 @@ import os
 CLOSE_MESSAGE = "close"
 SYNC_MESSAGE = "sync"
 SYNC_PASSWORD = b'sync password'
-SYNC_PORT = 6000
 
 
 def listen():
-    address = ('localhost', SYNC_PORT)     # family is deduced to be 'AF_INET'
+    port = int(os.getenv('TIME_SYNC_PORT'))
+    address = ('localhost', port)  # family is deduced to be 'AF_INET'
     listener = Listener(address, authkey=SYNC_PASSWORD)
     while True:
-        print(f'Listening for time sync connections on port {SYNC_PORT}...')
+        print(f'Listening for time sync connections on port {port}...')
         conn = listener.accept()
         print(f'Time sync connection accepted from {listener.last_accepted}')
         msg = conn.recv()

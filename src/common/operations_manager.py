@@ -13,7 +13,8 @@ from common.communicator import (
     CREDITS
 )
 from utils.time_utils import is_over, generate_stoptime
-from scripts.scamper import main
+from scripts.measure import main
+
 
 class OperationsManager():
     def __init__(self, storage, communicator):
@@ -28,7 +29,7 @@ class OperationsManager():
 
         for operation in self.current_ops.values():
             total_credits += operation.credits
-        
+
         return total_credits
 
     def recover_state(self):
@@ -48,10 +49,10 @@ class OperationsManager():
 
     def start(self):
         self.current_ops = self.storage.read_operations_state()
-        
+
         self.p = Process(target=self.run)
         self.p.start()
-        
+
     def stop(self):
         self.communicator.stop_operations()
         self.p.join()
@@ -73,21 +74,22 @@ class OperationsManager():
                 op_id = operation_data["id"]
 
                 if status == IN_PROCESS:
-                    print("New operation income")
+                    print("New operation event received")
                     operation = Operation(
                         operation_data["id"],
                         operation_data["params"],
                         operation_data["credits"],
                         operation_data["cron"],
                         operation_data["times_per_minute"],
-                        operation_data["stop_time"]
+                        operation_data["stop_time"],
+                        operation_data["binary"]
                     )
 
                     self.current_ops[op_id] = operation
                     self.schedule_operation(operation)
 
                 elif status == TASK_FINISHED:
-                    print("New task finished income")
+                    print("New task finished event received")
                     task_data = data[3]
 
                     task = Task(task_data["code"])
@@ -95,7 +97,8 @@ class OperationsManager():
                     try:
                         self.current_ops[op_id].add_task(task)
                         self.storage.mark_task_finished(task)
-                        self.communicator.notify_end_task(self.current_ops[op_id], task)
+                        self.communicator.notify_end_task(
+                            self.current_ops[op_id], task)
                     except:
                         # Operation has been stopped
                         # Clean tmp file
@@ -110,7 +113,7 @@ class OperationsManager():
                     self.check_operation_finished(self.current_ops[op_id])
 
                 elif status == TASK_SENT:
-                    print("Task sent income")
+                    print("Task sent event received")
                     task_data = data[3]
 
                     task = Task(task_data["code"])
@@ -122,7 +125,7 @@ class OperationsManager():
                     self.check_operation_finished(self.current_ops[op_id])
 
                 self.save_current_status()
-                
+
                 print("Current ops after: ", self.current_ops)
 
             data = self.communicator.read_operations()
@@ -149,16 +152,17 @@ class OperationsManager():
 
         operation_str = json.dumps(operation.data())
 
-        cron_command = f"python3 /src/scripts/scamper.py {operation.times_per_minute} '{sub_cmd_str}' '{operation_str}'"
+        # cron_command = f"python3 /src/scripts/measure.py {operation.times_per_minute} '{sub_cmd_str}' '{operation_str}' '{operation.binary}' >> /src/output.log 2>&1"
+        cron_command = f"python3 /src/scripts/measure.py {operation.times_per_minute} '{sub_cmd_str}' '{operation_str}' '{operation.binary}'"
 
         print("Cron command: ", cron_command)
 
         #p = Process(target=main)
-        #p.start()
+        # p.start()
         # Saves execution cron
         with CronTab(user=True) as cron:
             job = cron.new(command=cron_command, comment=operation.id)
-            #job.minute.every(1)
+            # job.minute.every(1)
             job.setall(operation.cron)
 
             print("Valid job: ", job.is_valid())
