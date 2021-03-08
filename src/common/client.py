@@ -113,3 +113,15 @@ class Client:
         )
 
         self.operations_manager.add_operation(operation)
+
+    def delete(self, op_id, params, credits_):
+        print(f"Deleting operation ${op_id}")
+        operation = Operation(
+            op_id,
+            None,
+            credits_,
+            params["cron"],
+            params["times_per_minute"],
+            params["stop_time"]
+        )
+        self.operations_manager.cancel_operation(operation)

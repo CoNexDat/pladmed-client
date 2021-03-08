@@ -39,6 +39,11 @@ def config_connection(client):
     @client.sio.on('ping')
     def on_ping(data):
         client.ping(data["_id"], data["params"], data["credits"])
+
+    @client.sio.on('delete')
+    def on_delete(data):
+        print(f"Got a delete message with params ${data}")
+        client.delete(data["_id"], data["params"], data["credits"])
         
 def connect_to_server(client):
     token = os.getenv('TOKEN', 'token')
