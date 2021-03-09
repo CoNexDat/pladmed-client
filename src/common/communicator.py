@@ -14,6 +14,7 @@ class Communicator:
         self.transmit_queue = SimpleQueue()
         self.operations_queue = SimpleQueue()
         self.client_queue = SimpleQueue()
+        self.emitter_queue = SimpleQueue()
     
     def read_operations(self):
         return self.operations_queue.get()
@@ -76,3 +77,17 @@ class Communicator:
         self.client_queue.put(
             credits_
         )
+
+    def read_emitter(self):
+        return self.emitter_queue.get()
+
+    def emit(self, to, data, callback=None):
+        self.emitter_queue.put([
+            NEW_DATA,
+            to,
+            data,
+            callback
+        ])
+
+    def stop_emitter(self):
+        self.emitter_queue.put([STOP])

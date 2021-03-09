@@ -14,26 +14,37 @@ from common.operation import (
     SCAMPER_BINARY
 )
 from common.communicator import Communicator
+from common.sender import Sender
 import time
-
+from common.communicator import (
+    STOP
+)
+from threading import Thread
 
 class Client:
     def __init__(self, sio, storage, max_credits):
         self.sio = sio
         self.parser = ParamsParser()
         self.storage = storage
+        self.sender = Sender(self.sio)
 
         self.communicator = Communicator()
 
-        self.operations_manager = OperationsManager(storage, self.communicator)
+        self.operations_manager = OperationsManager(
+            storage,
+            self.communicator
+        )
 
         self.finish_task_communicator = FinishTaskCommunicator(
-            self.communicator)
+            self.communicator
+        )
+
         self.finish_operation_communicator = FinishOperationCommunicator(
-            self.communicator)
+            self.communicator
+        )
 
         self.transmit_manager = TransmitManager(
-            self.sio,
+            self.sender,
             storage,
             self.communicator
         )
@@ -45,6 +56,18 @@ class Client:
         self.operations_manager.start()
         self.finish_task_communicator.start()
         self.finish_operation_communicator.start()
+
+    def emitter_p(self):
+        data = self.communicator.read_emitter()
+
+        while data[0] != STOP:
+            self.sender.emit(
+                data[1],
+                data[2],
+                data[3]
+            )
+
+            data = self.communicator.read_emitter()
 
     def start_connection(self, host):
         actual_credits = self.communicator.get_current_credits()
@@ -60,16 +83,16 @@ class Client:
 
     def connect(self):
         print("Client connected")
+        self.emitter = Thread(target=self.emitter_p)
+        self.emitter.start()
         self.transmit_manager.start()
-        # self.finish_task_communicator.start()
-        # self.finish_operation_communicator.start()
 
     def disconnect(self):
         print("Client disconnected")
 
         self.transmit_manager.stop()
-        # self.finish_task_communicator.stop()
-        # self.finish_operation_communicator.stop()
+        self.communicator.stop_emitter()
+        self.emitter.join()
 
     def traceroute(self, op_id, params, credits_):
         # Params must be a dict with params
@@ -94,6 +117,15 @@ class Client:
             params["times_per_minute"],
             params["stop_time"],
             SCAMPER_BINARY
+        )
+
+        data_to_send = {
+            "credits": credits_
+        }
+
+        self.sender.emit(
+            "new_operation",
+            data_to_send
         )
 
         self.operations_manager.add_operation(operation)
@@ -123,6 +155,15 @@ class Client:
             SCAMPER_BINARY
         )
 
+        data_to_send = {
+            "credits": credits_
+        }
+
+        self.sender.emit(
+            "new_operation",
+            data_to_send
+        )
+
         self.operations_manager.add_operation(operation)
 
     def dns(self, op_id, params, credits_):
@@ -146,6 +187,15 @@ class Client:
             params["times_per_minute"],
             params["stop_time"],
             DIG_BINARY
+        )
+
+        data_to_send = {
+            "credits": credits_
+        }
+
+        self.sender.emit(
+            "new_operation",
+            data_to_send
         )
 
         self.operations_manager.add_operation(operation)

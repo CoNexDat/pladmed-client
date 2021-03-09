@@ -13,6 +13,7 @@ import subprocess
 from multiprocessing import Process
 from common.operations_manager import OperationsManager
 from utils.credits import rates_to_credits
+from multiprocessing import Process
 
 
 def config_connection(client):
@@ -52,21 +53,25 @@ def connect_to_server(client):
         os.getenv('BACKEND_IP') + ":" + os.getenv('BACKEND_PORT')
     token = os.getenv('TOKEN', 'token')
 
-    connected = False
+    running = True
 
     config_connection(client)
 
-    while not connected:
+    while running:
         try:
             client.start_connection(backend_url + "?token=" + token)
-            connected = True
-        except:
+            client.sio.wait()
+        except Exception as e:
+            print("Reconnecting: ", e)
             time.sleep(config.DELAY_BETWEEN_RETRY)
 
 
+def start_timesync():
+    timesync.listen()
+
+
 def main():
-    sio = socketio.Client(engineio_logger=True,
-                          reconnection=True, reconnection_attempts=0)
+    sio = socketio.Client(engineio_logger=True, reconnection=False)
 
     print("Now is: ", datetime.datetime.now())
 
@@ -91,9 +96,12 @@ def main():
 
     client = Client(sio, storage, max_credits)
 
+    timesync_p = Process(target=start_timesync)
+    timesync_p.start()
+
     connect_to_server(client)
 
-    timesync.listen()
+    timesync_p.join()
 
 
 if __name__ == "__main__":
