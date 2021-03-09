@@ -4,14 +4,14 @@ import subprocess
 from common.operation import Operation, SCAMPER_BINARY
 import os
 from common.task import Task
-
-STOP = 0
-NEW_RESULTS = 1
+from common.communicator import (
+    STOP
+)
 
 
 class TransmitManager():
-    def __init__(self, sio, storage, communicator):
-        self.sio = sio
+    def __init__(self, sender, storage, communicator):
+        self.sender = sender
         self.storage = storage
         self.communicator = communicator
 
@@ -69,10 +69,9 @@ class TransmitManager():
                 "format": "warts" if operation.binary == SCAMPER_BINARY else "gzip"
             }
 
-            self.sio.emit(
+            self.sender.emit(
                 "results",
                 data_to_send,
-                namespace='',
                 callback=callback
             )
 

@@ -137,6 +137,15 @@ class OperationsManager():
 
     def check_operation_finished(self, operation):
         if operation.status == FINISHED and operation.all_task_sent():
+            data_to_send = {
+                "credits": operation.credits
+            }
+
+            self.communicator.emit(
+                "finish_operation",
+                data_to_send
+            )
+
             del self.current_ops[operation.id]
 
     def save_current_status(self):
