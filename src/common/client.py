@@ -21,6 +21,7 @@ from common.communicator import (
 )
 from threading import Thread
 
+
 class Client:
     def __init__(self, sio, storage, max_credits):
         self.sio = sio
@@ -49,7 +50,7 @@ class Client:
             self.communicator
         )
 
-        print("Client with availability for up to: ", max_credits, " creditos")
+        print("Client with availability for up to: ", max_credits, " credits")
 
         self.max_credits = max_credits
 
