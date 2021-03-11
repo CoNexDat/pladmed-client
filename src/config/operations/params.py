@@ -35,7 +35,6 @@ PING_PARAMS = {
 
 DNS_PARAMS = {
     "address": CommandManager("-b", AnyValidator()),
-    "dns": MultiCommandManager("-q", AnyValidator()),
     "ipv4": CommandManager("-4", EmptyValidator()),
     "ipv6": CommandManager("-6", EmptyValidator()),
     "name": MultiCommandManager("-q", AnyValidator()),

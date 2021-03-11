@@ -37,9 +37,9 @@ class ParamsParser:
         return general_cmd
 
     def resolve_domain_names(self, params):
-        if "domains" not in params:
+        if "fqdns" not in params:
             return params
-        dig_cmd = ["dig", "+short"] + params["domains"]
+        dig_cmd = ["dig", "+short"] + params["fqdns"]
         dig_proc = subprocess.run(dig_cmd, stdout=subprocess.PIPE)
         dig_output = dig_proc.stdout.decode("utf-8")
         output_lines = dig_output.split('\n')
@@ -54,5 +54,5 @@ class ParamsParser:
             params["ips"] = ips
         else:
             params["ips"] = params["ips"] + ips
-        del params["domains"]
+        del params["fqdns"]
         return params
