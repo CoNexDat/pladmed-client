@@ -1,3 +1,3 @@
 # Scheduling sequence diagram
 
-![pladmed-client scheduling sequence diagram](scheduling.png)
+![pladmed-client scheduling sequence diagram](scheduling-sequence-diagram.png)
