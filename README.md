@@ -29,3 +29,5 @@ Next, an explanation of each key, all of which are **mandatory**.
 ## Design documentation
 
 * [Packages diagram](doc/packages-diagram.md)
+
+* [Scheduling sequence diagram](doc/scheduling.md)
