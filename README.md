@@ -25,3 +25,7 @@ Next, an explanation of each key, all of which are **mandatory**.
 * **BACKEND_PORT**: TCP port where pladmed-backend exposes its service. Together with BACKEND_IP, they locate pladmed-backend in the probe context.
 
 * **TIME_SYNC_PORT, FINISH_OPERATION_PORT, FINISH_TASK_PORT**: These are TCP ports used internally by the probe for inter process communication. Since the probe runs inside a Docker container, there is no possible port collision with the hosts, since these ports are not mapped to ports outside the container. The only thing to be aware of, is that these three have all different values, and don't collide with any well known service port inside the container. The example values should be good enough here.
+
+## Design documentation
+
+* [Packages diagram](doc/packages-diagram.md)
