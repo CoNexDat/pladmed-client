@@ -29,7 +29,7 @@ def config_connection(client):
 
     @client.sio.event
     def disconnect():
-        # This is only called for the process who contains all the other processes
+        # This is only called for the process which contains all the other processes
         client.disconnect()
 
         print("All processes finished")
