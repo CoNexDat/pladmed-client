@@ -2,8 +2,9 @@
 
 ![pladmed-client class diagram](class-diagram.png)
 
-## Class responsibilities:
+In this diagram, a "leaf" class is one which does not reference any other class (asides from standard or third party libraries). First tier classes reference only leaf classes; second tier classes reference at least one first tier class. N-th tier classes reference at least one (N-1)-th tier class. This is a way to visualize the impact of changes. The higher the tier, the less classes will be impacted by the change.
 
+## Class responsibilities:
 
 ### `common` package
 
