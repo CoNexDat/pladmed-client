@@ -1,5 +1,6 @@
 from multiprocessing import Lock
 
+
 class Sender:
     def __init__(self, sio):
         self.sio = sio
@@ -16,6 +17,7 @@ class Sender:
                 callback=callback
             )
         except Exception as e:
+            # TODO: Lock? Retry?
             pass
-        
+
         self.lock.release()
