@@ -1,4 +1,4 @@
-from multiprocessing import SimpleQueue
+from multiprocessing import Queue
 
 STOP = 0
 NEW_DATA = 1
@@ -11,10 +11,10 @@ CREDITS = 4
 
 class Communicator:
     def __init__(self):
-        self.transmit_queue = SimpleQueue()
-        self.operations_queue = SimpleQueue()
-        self.client_queue = SimpleQueue()
-        self.emitter_queue = SimpleQueue()
+        self.transmit_queue = Queue()
+        self.operations_queue = Queue()
+        self.client_queue = Queue()
+        self.emitter_queue = Queue()
     
     def read_operations(self):
         return self.operations_queue.get()

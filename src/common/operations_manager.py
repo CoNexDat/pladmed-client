@@ -40,13 +40,13 @@ class OperationsManager():
 
         for operation in list(self.current_ops.values()):
             self.check_operation_finished(operation)
-
+        
         for operation in self.current_ops.values():
             finished_tasks = operation.finished_tasks()
 
             for task in finished_tasks:
                 self.communicator.notify_end_task(operation, task)
-
+                    
     def start(self):
         self.current_ops = self.storage.read_operations_state()
 

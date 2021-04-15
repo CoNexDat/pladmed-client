@@ -49,8 +49,11 @@ def config_connection(client):
 
 
 def connect_to_server(client):
-    backend_url = 'ws://' + \
-        os.getenv('BACKEND_IP') + ":" + os.getenv('BACKEND_PORT')
+    backend_url = 'wss://' + \
+        os.getenv('BACKEND_FQDNS') + "/"
+
+    print("Connecting to: ", backend_url)
+    
     token = os.getenv('TOKEN', 'token')
 
     running = True

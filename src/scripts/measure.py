@@ -34,29 +34,32 @@ def end_task(operation_str, task, client):
 
 
 def main():
-    client = Client(address)
-
     times_per_minute = int(sys.argv[1])
 
-    sub_cmd_joined = sys.argv[2]
-
-    sub_cmd = sub_cmd_joined.split("|")
-
-    operation_str = sys.argv[3]
-
-    binary = sys.argv[4]
-
-    run_measurement = run_scamper if binary == SCAMPER_BINARY else run_dig
+    # This is a really quick fix. You should not create more than 1 client
     for i in range(times_per_minute):
+        client = Client(address)
+
+        sub_cmd_joined = sys.argv[2]
+
+        sub_cmd = sub_cmd_joined.split("|")
+
+        operation_str = sys.argv[3]
+
+        binary = sys.argv[4]
+
+        run_measurement = run_scamper if binary == SCAMPER_BINARY else run_dig
+    
         start = time.time()
         task = Task(str(uuid.uuid4()))
 
         run_measurement(task, sub_cmd)
 
         time.sleep(max(60 / times_per_minute - int(time.time() - start), 0))
+        
         end_task(operation_str, task, client)
 
-    client.close()
+        client.close()
 
 
 def run_scamper(task, sub_cmd):
