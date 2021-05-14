@@ -33,3 +33,6 @@ Next, an explanation of each key, all of which are **mandatory**.
 * [Class diagram](doc/class-diagram.md)
 
 * [Scheduling sequence diagram](doc/scheduling.md)
+
+## License
+All releases of PlaDMed are licensed under the GPL v2.
